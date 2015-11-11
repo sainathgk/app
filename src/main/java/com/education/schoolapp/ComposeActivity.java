@@ -17,23 +17,27 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.MultiAutoCompleteTextView;
+import android.widget.RadioGroup;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.education.service.schoolapp.NotificationReceiver;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 public class ComposeActivity extends AppCompatActivity implements View.OnClickListener {
 
     private EditText mTitleView;
     private EditText mDescView;
-    private EditText mToView;
+    private MultiAutoCompleteTextView mToView;
     private LinearLayout mDateTimeLayout;
     private int mType;
     private int mYear;
@@ -57,6 +61,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
     private int mSelectedDay;
     private int mSelectedHour;
     private int mSelectedMinute;
+    private RadioGroup mRadioCompose;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,7 +69,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.compose_view);
 
-        mToView = (EditText) findViewById(R.id.msg_to);
+        mToView = (MultiAutoCompleteTextView) findViewById(R.id.msg_to);
         mTitleView = (EditText) findViewById(R.id.msg_title);
         mDescView = (EditText) findViewById(R.id.msg_description);
 
@@ -86,6 +91,32 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
         if (!mLoginType.isEmpty()) {
             mIsTeacher = mLoginType.equalsIgnoreCase("Teacher");
         }
+
+        mToView.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
+        ArrayList<String> emailAddressCollection = new ArrayList<String>();
+        ArrayAdapter<String> adapter =
+                new ArrayAdapter<String>(ComposeActivity.this,
+                        android.R.layout.simple_spinner_dropdown_item, getResources().getStringArray(R.array.toList));
+
+        adapter.setDropDownViewResource(android.R.layout.simple_expandable_list_item_1);
+        mToView.setThreshold(1);
+        mToView.setAdapter(adapter);
+
+        mRadioCompose = (RadioGroup) findViewById(R.id.radio_compose);
+        mRadioCompose.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.individual_radioButton2:
+                        mToView.setVisibility(View.VISIBLE);
+                        break;
+
+                    case R.id.broadcast_radioButton:
+                        mToView.setVisibility(View.GONE);
+                        break;
+                }
+            }
+        });
     }
 
     @Override
@@ -105,10 +136,15 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
     private void handleSendMessage() {
         //TODO: Handle the Send of Compose message.
         //Perform DB operation.
-        String textTo = mToView.getText().toString();
-        if (textTo.equalsIgnoreCase("To : ") || textTo.isEmpty()) {
-            mToView.setFocusable(true);
-            return;
+        String[] senderIds = getResources().getStringArray(R.array.toList);
+
+        String textTo = senderIds.toString();
+        if (mRadioCompose.getCheckedRadioButtonId() == R.id.individual_radioButton2) {
+            textTo = mToView.getText().toString();
+            if (textTo.isEmpty()) {
+                mToView.setFocusable(true);
+                return;
+            }
         }
         String textTitle = mTitleView.getText().toString();
         if (textTitle.isEmpty()) {

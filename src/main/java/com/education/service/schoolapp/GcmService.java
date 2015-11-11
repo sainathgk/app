@@ -8,7 +8,6 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 
 import com.education.schoolapp.HomeMainActivity;
 import com.education.schoolapp.R;
@@ -27,7 +26,7 @@ public class GcmService extends GcmListenerService {
 
     @Override
     public void onMessageReceived(String from, Bundle data) {
-        String message = data.getString("message");
+        /*String message = data.getString("message");
         Log.d(TAG, "From: " + from);
         Log.d(TAG, "Message: " + message);
 
@@ -37,7 +36,7 @@ public class GcmService extends GcmListenerService {
             // normal downstream message.
         }
 
-        sendNotification(message);
+        sendNotification(message);*/
     }
 
     @Override

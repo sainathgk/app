@@ -20,8 +20,8 @@ public class SchoolDataConstants {
     private final static String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS ";
 
     /* String format for table creations for school app */
-    public final static String CREATE_IDENTITY_TABLE = CREATE_TABLE + IDENTITY_TABLE + " (_ID INTEGER UNIQUE DEFAULT 1, user_id TEXT UNIQUE NOT NULL, password TEXT NOT NULL, " +
-            "user_type TEXT NOT NULL, gcm_id TEXT); ";
+    public final static String CREATE_IDENTITY_TABLE = CREATE_TABLE + IDENTITY_TABLE + " (_ID INTEGER UNIQUE DEFAULT 1, loginid TEXT UNIQUE NOT NULL, password TEXT NOT NULL, " +
+            "user_type TEXT NOT NULL, gcmid TEXT); ";
 
     public final static String CREATE_USER_PROFILE = CREATE_TABLE + USER_PROFILE + " (user_id TEXT UNIQUE NOT NULL, name TEXT NOT NULL, " +
             "age INTEGER NOT NULL, blood_group TEXT, class TEXT NOT NULL, section TEXT NOT NULL, user_image BLOB, " +

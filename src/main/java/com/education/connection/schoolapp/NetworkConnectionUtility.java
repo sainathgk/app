@@ -1,11 +1,9 @@
 package com.education.connection.schoolapp;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.common.io.CharStreams;
 
@@ -22,10 +20,33 @@ import java.net.URL;
  */
 public class NetworkConnectionUtility {
 
-    private final Context mContext;
     private NetworkResponseListener mCallbackListener;
     private ImageResponseListener mImageCbListener;
     private final static String TAG = NetworkConnectionUtility.class.toString();
+
+    public void loginUser(String loginPayload) {
+        if (NetworkConstants.isServerON) {
+            Log.i(TAG, "Login User API");
+            new AsyncNetwork().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "SEARCH", NetworkConstants.AUTHENTICATE, loginPayload);
+        } else {
+            //DB insert is already done.
+        }
+
+    }
+
+    public void postMessage(String messagePayload) {
+        if (NetworkConstants.isServerON) {
+            Log.i(TAG, "Post Message API");
+            new AsyncNetwork().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "POST", messagePayload);
+        }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        }).run();
+    }
 
     public interface NetworkResponseListener {
         void onResponse(String urlString, String networkResult);
@@ -35,8 +56,7 @@ public class NetworkConnectionUtility {
         void onImageResponse(String urlString, Bitmap imageResult);
     }
 
-    public NetworkConnectionUtility(Context ctx) {
-        mContext = ctx;
+    public NetworkConnectionUtility() {
     }
 
     public void setNetworkListener(NetworkResponseListener listener) {
@@ -68,6 +88,9 @@ public class NetworkConnectionUtility {
                 result = doPostMethod(url, payload);
             } else if (method.equalsIgnoreCase("GET")) {
                 result = doGetMethod(url);
+            } else if (method.equalsIgnoreCase("SEARCH")) {
+                String payload = params[2];
+                result = doSearchMethod(url, payload);
             }
 
             return result;
@@ -81,7 +104,9 @@ public class NetworkConnectionUtility {
                 Log.i(TAG, resResult);
                 mCallbackListener.onResponse(urlString, resResult);
             } else {
-                Toast.makeText(mContext, "Network issues, Please check your Internet", Toast.LENGTH_SHORT).show();
+                Log.i(TAG, "Some Network Issues");
+                mCallbackListener.onResponse(urlString, null);
+                //Toast.makeText(mContext, "Network issues, Please check your Internet", Toast.LENGTH_SHORT).show();
             }
         }
     }

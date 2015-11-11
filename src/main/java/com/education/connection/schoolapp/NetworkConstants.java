@@ -5,13 +5,13 @@ package com.education.connection.schoolapp;
  */
 public class NetworkConstants {
     public static final boolean isServerON = true;
-    private static final String SERVER_ADDRESS = ""; //TODO : Add the Server address of School App
-    private static final String HOST_URL = "http://" + SERVER_ADDRESS + ":8080/";
+    private static final String SERVER_ADDRESS = "52.88.98.39";
+    private static final String HOST_URL = "http://" + SERVER_ADDRESS;
 
-    public final static String AUTHENTICATE = HOST_URL + "authenticate";
+    public final static String AUTHENTICATE = HOST_URL + "/members/login.json";
 
     //GET - http://<server_ip>/getStudentProfile?parentId=758x584d6
-    public final static String GET_USER_DETAILS = HOST_URL + "getStudentProfile?parentId=";
+    public final static String GET_USER_DETAILS = HOST_URL + "/getProfile.json?id=";
 
     //GET - http://<server_ip>getAttendance?studentId=254862014
     public final static String GET_STUDENT_ATTENDANCE = HOST_URL + "getAttendance?studentId=";
@@ -19,11 +19,17 @@ public class NetworkConstants {
     //GET - http://<server_ip>/getTeacherProfile?id=758x58sef
     public final static String GET_TEACHER_ATTENDANCE = HOST_URL + "getTeacherProfile?id=";
 
+    //GET -  All the class students used to post Message
+    public final static String GET_CLASS_STUDENTS = HOST_URL + "/getAllStudents?class=";
+
     //GET - http://<server_ip>/getAllMessages?Class=LKG&id=758x584d6
     public final static String GET_ALL_MESSAGES = HOST_URL + "getAllMessages?Class=";
 
+    //GET - http://<server_ip>/getMessage/<message_id>.json
+    public final static String GET_MESSAGE = HOST_URL + "/getMessage/";
+
     //POST - http://<server_ip>/postMessage
-    public final static String POST_MESSAGE = HOST_URL + "postMessage";
+    public final static String POST_MESSAGE = HOST_URL + "/createMessage.json";
 
     //GET - http://<server_ip>/getAllNotifications?Class=LKG&id=758x584d6
     public final static String GET_ALL_NOTIFICATIONS = HOST_URL + "getAllNotifications?Class=";

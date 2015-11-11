@@ -1,11 +1,13 @@
 package com.education.schoolapp;
 
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
@@ -20,10 +22,15 @@ import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
+import com.education.connection.schoolapp.JSONUtility;
+import com.education.connection.schoolapp.NetworkConnectionUtility;
 import com.education.service.schoolapp.QuickstartPreferences;
 import com.education.service.schoolapp.RegistrationIntentService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 
@@ -46,6 +53,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private static final String TAG = LoginActivity.class.toString();
 
     private BroadcastReceiver mRegistrationReceiver;
+    private ProgressDialog progress;
+    private NetworkConnectionUtility networkConn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,10 +79,51 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         .getBoolean(QuickstartPreferences.SENT_TOKEN_TO_SERVER, false);
 
                 if (sentToken) {
-                    //TODO Make a Server call for Login with GCM ID
+                    String[] projection = {"loginid", "password", "gcmid"};
+                    Cursor userCursor = getContentResolver().query(Uri.parse("content://com.education.schoolapp/identity"), projection, null, null, null);
+                    JSONUtility jsonUtility = new JSONUtility();
+                    String loginDetails = "";
+                    jsonUtility.setColumsList(projection);
+                    if (userCursor != null && userCursor.getCount() > 0) {
+                        userCursor.moveToFirst();
+
+                        try {
+                            JSONObject jsonObject = jsonUtility.toJSON(userCursor);
+                            loginDetails = new JSONObject().put("member", jsonObject).toString();
+                            Log.i(TAG, loginDetails);
+                            userCursor.close();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    networkConn.loginUser(loginDetails);
                 }
+                //launhHomeActivity();
             }
         };
+
+        progress = new ProgressDialog(this);
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setIndeterminate(true);
+        progress.setTitle("Authenticating ...");
+
+        networkConn = new NetworkConnectionUtility();
+
+        NetworkResp networkResp = new NetworkResp();
+        networkConn.setNetworkListener(networkResp);
+    }
+
+    private class NetworkResp implements NetworkConnectionUtility.NetworkResponseListener {
+        @Override
+        public void onResponse(String urlString, String networkResult) {
+            //Toast.makeText(getApplicationContext(), "Posted Successfully " + networkResult, Toast.LENGTH_SHORT).show();
+            if (networkResult == null) {
+                return;
+            }
+            //TODO : Add user profile data to DB.
+            progress.dismiss();
+            launhHomeActivity();
+        }
     }
 
     @Override
@@ -104,6 +154,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             return;
         }
 
+        progress.show();
+
         int mSelectedRadioId = mRadioLayout.getCheckedRadioButtonId();
         switch (mSelectedRadioId) {
             case R.id.parent_radioButton:
@@ -117,8 +169,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 break;
         }
 
-        //TODO : Make authentication request with User ID & Password
-
         SharedPreferences sharePrefs = getApplicationContext().getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
 
         SharedPreferences.Editor editor = sharePrefs.edit();
@@ -129,7 +179,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         //DB insert of all these Values
         ContentValues loginValues = new ContentValues();
-        loginValues.put("user_id", userNameText);
+        loginValues.put("loginid", userNameText);
         loginValues.put("password", passWordText);
         loginValues.put("user_type", mLoginType);
 
@@ -140,7 +190,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             Intent intent = new Intent(this, RegistrationIntentService.class);
             startService(intent);
         }
+    }
 
+    private void launhHomeActivity() {
         Intent homeIntent = new Intent(this, HomeMainActivity.class);
         homeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(homeIntent);

@@ -118,4 +118,11 @@
     <string name="teacher_name">Ruhina</string>
     
     <string name="gcm_defaultSenderId">158361423322</string>
+
+    <string-array name="toList">
+        <item>Sainath</item>
+        <item>Purna</item>
+        <item>Nidhish</item>
+        <item>Hari</item>
+    </string-array>
 </resources>
