@@ -17,8 +17,7 @@ import java.util.HashMap;
  * Created by Sainath on 24-10-2015.
  */
 public class SchoolDataUtility {
-    ArrayList<MessageItem> msgArray = null;
-    Cursor msgCursor = null;
+
     String mLoginName = null;
     boolean mIsTeacher = false;
 
@@ -32,8 +31,9 @@ public class SchoolDataUtility {
 
     public ArrayList<MessageItem> getAllMessages(Context context) {
         String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id",
-                "sender_profile_image"};
-
+                "sender_profile_image", "read_status"};
+        ArrayList<MessageItem> msgArray = null;
+        Cursor msgCursor = null;
         /*String[] messageProjection = {"msg_id", "from_name", "from_image", "msg_title", "msg_description",
                 "msg_date", "msg_attachment_path", "read_status"};*/
         /*String[] messageProjection = {"msg_id", "sender_id", "sender_profile_image", "subject", "body",
@@ -64,8 +64,8 @@ public class SchoolDataUtility {
                 msgItem.msgTitle = msgCursor.getString(msgCursor.getColumnIndex("subject"));
                 msgItem.msgDescription = msgCursor.getString(msgCursor.getColumnIndex("body"));
                 msgItem.msgDate = msgCursor.getString(msgCursor.getColumnIndex("start_date"));
-                /*msgItem.msgAttachment = (msgCursor.getString(msgCursor.getColumnIndex("msg_attachment_path")) != null) ? true : false;
-                msgItem.msgReadStatus = msgCursor.getShort(msgCursor.getColumnIndex("read_status"));*/
+                /*msgItem.msgAttachment = (msgCursor.getString(msgCursor.getColumnIndex("msg_attachment_path")) != null) ? true : false;*/
+                msgItem.msgReadStatus = msgCursor.getShort(msgCursor.getColumnIndex("read_status"));
                 msgItem.msgFromImage = msgCursor.getBlob(msgCursor.getColumnIndex("sender_profile_image"));
 
                 msgArray.add(msgItem);
@@ -79,6 +79,38 @@ public class SchoolDataUtility {
     }
 
     public ArrayList<MessageItem> getSavedMessages(Context context) {
+        String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id",
+                "sender_profile_image", "read_status"};
+        ArrayList<MessageItem> msgArray = null;
+        Cursor msgCursor = null;
+        String selection = " member_ids like '%" + mLoginName + "%' and message_type = 1 and saved = 1";
+
+        msgCursor = context.getContentResolver().query(Uri.parse("content://com.education.schoolapp/received_messages_all"),
+                messageProjection, selection, null, "start_date DESC");
+        if (msgCursor != null && msgCursor.getCount() > 0) {
+            msgArray = new ArrayList<>(msgCursor.getCount());
+
+            while (msgCursor.moveToNext()) {
+                MessageItem msgItem = new MessageItem();
+                msgItem.msgId = msgCursor.getString(msgCursor.getColumnIndex("message_id"));
+                msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_id"));
+                msgItem.msgTo = msgCursor.getString(msgCursor.getColumnIndex("member_ids"));
+                msgItem.msgTitle = msgCursor.getString(msgCursor.getColumnIndex("subject"));
+                msgItem.msgDescription = msgCursor.getString(msgCursor.getColumnIndex("body"));
+                msgItem.msgDate = msgCursor.getString(msgCursor.getColumnIndex("start_date"));
+                /*msgItem.msgAttachment = (msgCursor.getString(msgCursor.getColumnIndex("msg_attachment_path")) != null) ? true : false;*/
+                msgItem.msgReadStatus = msgCursor.getShort(msgCursor.getColumnIndex("read_status"));
+                msgItem.msgFromImage = msgCursor.getBlob(msgCursor.getColumnIndex("sender_profile_image"));
+
+                msgArray.add(msgItem);
+            }
+        }
+        if (msgCursor != null) {
+            msgCursor.close();
+        }
+
+        return msgArray;
+    }/*{
         String[] messageProjection = {"msg_id", "from_name", "from_image", "msg_title", "msg_description",
                 "msg_date", "msg_attachment_path", "read_status", "to_name"};
         Cursor msgCursor = null;
@@ -115,10 +147,11 @@ public class SchoolDataUtility {
         }
 
         return msgArray;
-    }
+    }*/
 
     public ArrayList<MessageItem> getOutboxMessages(Context context) {
         String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id", "sender_profile_image"};
+        ArrayList<MessageItem> msgArray = null;
         Cursor msgCursor = null;
         String selection = " sender_id like '" + mLoginName + "' and message_type = 1";
 
@@ -149,8 +182,9 @@ public class SchoolDataUtility {
 
     public ArrayList<MessageItem> getAllNotifications(Context context) {
         String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id",
-                "sender_profile_image"};
-
+                "sender_profile_image", "read_status"};
+        ArrayList<MessageItem> msgArray = null;
+        Cursor msgCursor = null;
         String selection = " member_ids like '%" + mLoginName + "%' and message_type = 2";
 
         msgCursor = context.getContentResolver().query(Uri.parse("content://com.education.schoolapp/received_messages_all"),
@@ -166,8 +200,7 @@ public class SchoolDataUtility {
                 msgItem.msgTitle = msgCursor.getString(msgCursor.getColumnIndex("subject"));
                 msgItem.msgDescription = msgCursor.getString(msgCursor.getColumnIndex("body"));
                 msgItem.msgDate = msgCursor.getString(msgCursor.getColumnIndex("start_date"));
-                /*msgItem.msgAttachment = (msgCursor.getString(msgCursor.getColumnIndex("msg_attachment_path")) != null) ? true : false;
-                msgItem.msgReadStatus = msgCursor.getShort(msgCursor.getColumnIndex("read_status"));*/
+                msgItem.msgReadStatus = msgCursor.getShort(msgCursor.getColumnIndex("read_status"));
                 msgItem.msgFromImage = msgCursor.getBlob(msgCursor.getColumnIndex("sender_profile_image"));
 
                 msgArray.add(msgItem);
@@ -214,6 +247,7 @@ public class SchoolDataUtility {
     public ArrayList<MessageItem> getSentNotifications(Context context) {
         /*String[] messageProjection = {"msg_id", "to_name", "noti_title", "noti_description", "noti_date", "from_image", "from_name"};*/
         String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id", "sender_profile_image"};
+        ArrayList<MessageItem> msgArray = null;
         Cursor msgCursor = null;
         String selection = " sender_id like '" + mLoginName + "' and message_type = 2";
 
@@ -256,6 +290,7 @@ public class SchoolDataUtility {
                 pendingMsgs[idx] = msgCursor.getString(msgCursor.getColumnIndex("message_id"));
                 idx++;
             }
+            msgCursor.close();
         }
 
         return pendingMsgs;
@@ -414,7 +449,6 @@ public class SchoolDataUtility {
     }
 
     public HashMap<String, String> getClassStudents(Context context) {
-        String[] studentIds = null;
         HashMap<String, String> students = null;
         Cursor stuCursor = null;
         String[] projection = {"student_id", "student_name"};
@@ -448,5 +482,4 @@ public class SchoolDataUtility {
 
         return teacherName;
     }
-
 }

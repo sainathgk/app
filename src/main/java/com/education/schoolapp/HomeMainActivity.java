@@ -2,7 +2,6 @@ package com.education.schoolapp;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -30,24 +29,15 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Base64;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.education.connection.schoolapp.JSONUtility;
 import com.education.connection.schoolapp.NetworkConnectionUtility;
-import com.education.connection.schoolapp.NetworkConstants;
 import com.education.database.schoolapp.SchoolDataUtility;
 import com.education.service.schoolapp.SchoolDataContentObserver;
-import com.google.common.base.Joiner;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -55,10 +45,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
 
 public class HomeMainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -219,6 +206,7 @@ public class HomeMainActivity extends AppCompatActivity
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
+/*
 
         progress = new ProgressDialog(this);
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
@@ -230,24 +218,25 @@ public class HomeMainActivity extends AppCompatActivity
 
         NetworkResp networkResp = new NetworkResp();
         networkConn.setNetworkListener(networkResp);
+*/
 
-        if (mIsTeacher) {
-            String className = getIntent().getStringExtra("class");
-            if (className == null) {
-                progress.dismiss();
-                return;
+        /*String className = getIntent().getStringExtra("class");
+        if (className == null) {
+            progress.dismiss();
+            return;
+        }
+        toStringArray = (String[]) Arrays.asList(className.split(",")).toArray();
+
+        for (int clas = 0; clas < toStringArray.length; clas++)
+            networkConn.getStudents(toStringArray[clas]);*/
+
+        /*String[] receivedMsgs = new SchoolDataUtility().getPendingMessages(this);
+        if (receivedMsgs != null && receivedMsgs.length > 0) {
+            for (int msg = 0; msg < receivedMsgs.length; msg++) {
+                progress.show();
+                networkConn.getMessage(receivedMsgs[msg]);
             }
-            toStringArray = (String[]) Arrays.asList(className.split(",")).toArray();
-
-            for (int clas = 0; clas < toStringArray.length; clas++)
-                networkConn.getStudents(toStringArray[clas]);
-        }
-
-        String[] receivedMsgs = new SchoolDataUtility().getPendingMessages(this);
-        for (int msg = 0; msg < receivedMsgs.length; msg++) {
-            progress.show();
-            networkConn.getMessage(receivedMsgs[msg]);
-        }
+        }*/
     }
 
     @Override
@@ -255,7 +244,7 @@ public class HomeMainActivity extends AppCompatActivity
         super.onResume();
     }
 
-    private class NetworkResp implements NetworkConnectionUtility.NetworkResponseListener {
+    /*private class NetworkResp implements NetworkConnectionUtility.NetworkResponseListener {
         @Override
         public void onResponse(String urlString, String networkResult) {
             if (urlString.startsWith(NetworkConstants.GET_CLASS_STUDENTS)) {
@@ -284,14 +273,14 @@ public class HomeMainActivity extends AppCompatActivity
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-            } else if (urlString.startsWith(NetworkConstants.GET_MESSAGE)) {
+            } *//*else if (urlString.startsWith(NetworkConstants.GET_MESSAGE)) {
                 if (networkResult == null) {
                     Log.i("Network", "Get Message API");
                     return;
                 }
                 try {
                     JSONObject messageObj = new JSONObject(networkResult);
-                    String[] messageProjection = {"subject","body", "sender_id", /*"start_date", "end_date", */"message_type"};
+                    String[] messageProjection = {"subject", "body", "sender_id", *//**//*"start_date", "end_date", *//**//*"message_type"};
                     JSONUtility jsonUtility = new JSONUtility();
                     jsonUtility.setColumsList(messageProjection);
 
@@ -322,14 +311,20 @@ public class HomeMainActivity extends AppCompatActivity
                     msgValues.put("sender_name", new SchoolDataUtility().getTeacherNameforStudent(getApplicationContext(), mLoginName));
 
                     getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
+
+                    ContentValues msgIdUpdate = new ContentValues();
+                    String selection = " message_id like '" + messageObj.getJSONObject("_id").getString("$oid") + "'";
+                    msgIdUpdate.put("status", 1);
+
+                    getContentResolver().update(Uri.parse("content://com.education.schoolapp/server_message_ids"), msgIdUpdate, selection, null);
                     progress.dismiss();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-            }
+            }*//*
         }
     }
-
+*/
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

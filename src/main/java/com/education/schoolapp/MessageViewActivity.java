@@ -1,7 +1,9 @@
 package com.education.schoolapp;
 
+import android.content.ContentValues;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
@@ -35,6 +37,7 @@ public class MessageViewActivity extends AppCompatActivity {
     private String mToText;
     private String mFromText;
     private String msgBox;
+    private String msgId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,8 +47,7 @@ public class MessageViewActivity extends AppCompatActivity {
         getActionBar().setIcon(R.drawable.school_logo);*/
         setContentView(R.layout.activity_message_view);
 
-        //String msgId = getIntent().getStringExtra("msg_id");
-        String msgId = getIntent().getStringExtra("msg_id");
+        msgId = getIntent().getStringExtra("msg_id");
         msgBox = getIntent().getStringExtra("msg_box");
         int msgType = getIntent().getIntExtra("msg_type", 1);
 
@@ -69,26 +71,15 @@ public class MessageViewActivity extends AppCompatActivity {
             JSONObject msgJsonObj = new JSONObject(msgItem);
             if (!msgJsonObj.optString("subject").isEmpty()) {
                 mTitle = msgJsonObj.getString("subject");
-            } /*else if (!msgJsonObj.optString("noti_title").isEmpty()) {
-                mTitle = msgJsonObj.getString("noti_title");
-            }*/
+            }
             if (!msgJsonObj.optString("body").isEmpty()) {
                 mDescription = msgJsonObj.getString("body");
-            } /*else if (!msgJsonObj.optString("noti_description").isEmpty()) {
-                mDescription = msgJsonObj.getString("noti_description");
-            }*/
+            }
             if (!msgJsonObj.optString("start_date").isEmpty()) {
                 mDate = msgJsonObj.getString("start_date");
-            } /*else if (!msgJsonObj.optString("noti_date").isEmpty()) {
-                mDate = msgJsonObj.getString("noti_date");
-            }*/
+            }
             byte[] imageBytes = Base64.decode(msgJsonObj.getString("sender_profile_image"), 0);
             mSenderImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-            /*JSONArray toArray = msgJsonObj.getJSONArray("member_ids");
-            HashMap<String, String> membersMap = new SchoolDataUtility().getClassStudents(this);
-            for (int i = 0; i < toArray.length(); i++) {
-                mToText = mToText.concat(membersMap.get(toArray.getString(i)) + ",");
-            }*/
 
             mToText = msgJsonObj.getString("member_names");
             mFromText = msgJsonObj.getString("sender_name");
@@ -107,6 +98,12 @@ public class MessageViewActivity extends AppCompatActivity {
         mToView.setText("to " + mToText);
         mDateView.setText(HomeMainActivity.getDateString(mDate));
 
+        ContentValues msgUpdate = new ContentValues();
+        String selection = "message_id like '" + msgId + "'";
+
+        msgUpdate.put("read_status", 0);
+
+        getContentResolver().update(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgUpdate, selection, null);
     }
 
     @Override
@@ -122,6 +119,13 @@ public class MessageViewActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_save:
+                ContentValues msgUpdate = new ContentValues();
+                String selection = "message_id like '" + msgId + "'";
+
+                msgUpdate.put("saved", 1);
+
+                getContentResolver().update(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgUpdate, selection, null);
+                Toast.makeText(this, "Message is saved", Toast.LENGTH_SHORT).show();
                 break;
 
             case R.id.action_reply:
@@ -131,6 +135,10 @@ public class MessageViewActivity extends AppCompatActivity {
                 break;
 
             case R.id.action_delete:
+                //TODO : make a Network call to server for deleting the message.
+                String delete_selection = "message_id like '" + msgId + "'";
+
+                getContentResolver().delete(Uri.parse("content://com.education.schoolapp/received_messages_all"), delete_selection, null);
                 break;
         }
 

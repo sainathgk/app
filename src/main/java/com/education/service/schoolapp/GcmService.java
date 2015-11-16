@@ -1,5 +1,6 @@
 package com.education.service.schoolapp;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentValues;
@@ -57,16 +58,22 @@ public class GcmService extends GcmListenerService {
         Log.d(TAG, "Message: " + data);
         //Toast.makeText(getApplicationContext(), "GCM Message Received from "+from, Toast.LENGTH_SHORT).show();
 
-        if (data != null && data.getBundle("message_id") != null) {
-            String msg_id = data.getBundle("message_id").getString("$oid");
-            Log.d(TAG, "Message Id : " + msg_id);
+        if (data != null && data.getString("message_id") != null) {
+            try {
+                JSONObject jsonObject = new JSONObject(data.getString("message_id"));
+                String msg_id = jsonObject.getString("$oid");
+                Log.d(TAG, "Message Id : " + msg_id);
 
-            networkConn = new NetworkConnectionUtility();
+                networkConn = new NetworkConnectionUtility();
 
-            NetworkResp networkResp = new NetworkResp();
-            networkConn.setNetworkListener(networkResp);
+                NetworkResp networkResp = new NetworkResp();
+                networkConn.setNetworkListener(networkResp);
 
-            networkConn.getMessage(msg_id);
+                networkConn.getMessage(msg_id);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
@@ -112,6 +119,29 @@ public class GcmService extends GcmListenerService {
                     msgValues.put("sender_name", messageObj.getString("sender_id"));
 
                     getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
+
+                    ContentValues msgIdUpdate = new ContentValues();
+                    String selection = " message_id like '" + messageObj.getJSONObject("_id").getString("$oid") + "'";
+                    msgIdUpdate.put("status", 1);
+
+                    getContentResolver().update(Uri.parse("content://com.education.schoolapp/server_message_ids"), msgIdUpdate, selection, null);
+
+                    Intent notiIntent = new Intent(getApplicationContext(), HomeMainActivity.class);
+
+                    PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notiIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT);
+                    NotificationManager mNotiManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                    Notification.Builder mNotiBuilder = new Notification.Builder(getApplicationContext());
+
+                    Notification noti = mNotiBuilder.setContentTitle(msgValues.getAsString("subject"))
+                            .setContentText(msgValues.getAsString("body"))
+                            .setSmallIcon(R.drawable.school_logo)
+                            .setContentIntent(contentIntent)
+                            .setAutoCancel(true)
+                            .build();
+                    noti.defaults |= Notification.DEFAULT_ALL;
+
+                    mNotiManager.notify(10, noti);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

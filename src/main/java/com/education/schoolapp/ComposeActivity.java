@@ -27,6 +27,7 @@ import com.education.connection.schoolapp.JSONUtility;
 import com.education.connection.schoolapp.NetworkConnectionUtility;
 import com.education.connection.schoolapp.NetworkConstants;
 import com.education.database.schoolapp.SchoolDataUtility;
+import com.google.common.base.Joiner;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -75,6 +76,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
     private int mComposeMessageId;
     private HashMap<String, String> mStudentsMap;
     private ArrayAdapter<String> adapter;
+    private String[] mStudentIdArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,16 +113,17 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
 
         mStudentsMap = new SchoolDataUtility().getClassStudents(this);
         if (mStudentsMap != null) {
-            String[] studentArray = new String[mStudentsMap.size()];
+            mStudentIdArray = new String[mStudentsMap.size()];
             int idx = 0;
 
             for (Map.Entry<String, String> mapEntry : mStudentsMap.entrySet()) {
-                studentArray[idx] = mapEntry.getKey();
+                mStudentIdArray[idx] = mapEntry.getKey();
                 idx++;
             }
+
             adapter =
                     new ArrayAdapter<String>(ComposeActivity.this,
-                            android.R.layout.simple_spinner_dropdown_item, studentArray);
+                            android.R.layout.simple_spinner_dropdown_item, mStudentIdArray);
 
             adapter.setDropDownViewResource(android.R.layout.simple_expandable_list_item_1);
         }
@@ -178,11 +181,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     private void handleSendMessage() {
-        //TODO: Handle the Send of Compose message.
-        //Perform DB operation.
-        String[] senderIds = getResources().getStringArray(R.array.toList);
-
-        String textTo = senderIds.toString();
+        String textTo = Joiner.on(",").skipNulls().join(mStudentIdArray);
         if (mRadioCompose.getCheckedRadioButtonId() == R.id.individual_radioButton2) {
             textTo = mToView.getText().toString();
             if (textTo.isEmpty()) {

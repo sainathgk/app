@@ -26,16 +26,21 @@ import android.widget.Toast;
 import com.education.connection.schoolapp.JSONUtility;
 import com.education.connection.schoolapp.NetworkConnectionUtility;
 import com.education.connection.schoolapp.NetworkConstants;
+import com.education.database.schoolapp.SchoolDataUtility;
 import com.education.service.schoolapp.QuickstartPreferences;
 import com.education.service.schoolapp.RegistrationIntentService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.common.base.Joiner;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -60,6 +65,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private NetworkConnectionUtility networkConn;
     private String mOid;
     private String mClassName;
+    private int mMessageArrayLength;
+    private int mCurrentMsg = 1;
+    private int mMessageFinalCount;
+    private String[] toStringArray;
+    private String[] receivedMsgs;
+    private int mClassesLength;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,20 +132,18 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private class NetworkResp implements NetworkConnectionUtility.NetworkResponseListener {
         @Override
         public void onResponse(String urlString, String networkResult) {
-            //Toast.makeText(getApplicationContext(), "Posted Successfully " + networkResult, Toast.LENGTH_SHORT).show();
-            if (networkResult == null) {
-                progress.setTitle("Failed");
-                progress.dismiss();
-                return;
-            }
-            //TODO : Add user profile data to DB.
             if (urlString.equalsIgnoreCase(NetworkConstants.AUTHENTICATE)) {
+                if (networkResult == null) {
+                    progress.setTitle("Failed");
+                    progress.dismiss();
+                    return;
+                }
                 int userType = -1;
                 JSONUtility jsonUtility = new JSONUtility();
                 String[] loginColumns = {"member_name", "dob", "age", "blood_group", "standards", "section",
-                                         "father_name", "father_contact_num", "father_email", "mother_name", "mother_contact_num", "mother_email",
-                                         "guardian_name", "guardian_contact_num", "guardian_email", "mentor_name", "mentor_contact_num", "mentor_email",
-                                         "loginid", "gcmid", "role", "subjects"};
+                        "father_name", "father_contact_num", "father_email", "mother_name", "mother_contact_num", "mother_email",
+                        "guardian_name", "guardian_contact_num", "guardian_email", "mentor_name", "mentor_contact_num", "mentor_email",
+                        "loginid", "gcmid", "role", "subjects"};
 
                 jsonUtility.setColumsList(loginColumns);
                 ContentValues userValues = null;
@@ -149,18 +158,30 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
                     mClassName = userJsonObj.getString("standards");
 
-                    //userJsonObj.optJSONArray("messages")
+                    if (mClassName != null) {
+                        toStringArray = (String[]) Arrays.asList(mClassName.split(",")).toArray();
+                        mClassesLength = toStringArray.length;
+
+                        for (int clas = 0; clas < mClassesLength; clas++)
+                            networkConn.getStudents(toStringArray[clas]);
+                    }
                     JSONArray messageArray = userJsonObj.getJSONArray("messages");
                     int msgArrayLength = messageArray.length();
+                    mMessageFinalCount = mMessageArrayLength = msgArrayLength;
                     if (msgArrayLength > 0) {
                         ContentValues[] msgIdValues = new ContentValues[msgArrayLength];
+                        receivedMsgs = new String[msgArrayLength];
                         for (int msgId = 0; msgId < msgArrayLength; msgId++) {
                             JSONObject msgIdObj = messageArray.getJSONObject(msgId);
                             msgIdValues[msgId] = new ContentValues();
-                            msgIdValues[msgId].put("message_id", msgIdObj.getJSONObject("_id").getString("$oid"));
+                            String messageId = msgIdObj.getJSONObject("_id").getString("$oid");
+                            msgIdValues[msgId].put("message_id", messageId);
+                            receivedMsgs[msgId] = messageId;
                             msgIdValues[msgId].put("message_type", msgIdObj.getString("message_type"));
                         }
                         getContentResolver().bulkInsert(Uri.parse("content://com.education.schoolapp/server_message_ids"), msgIdValues);
+                    } else {
+                        launhHomeActivity();
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -188,9 +209,93 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 editor.putString(SHARED_LOGIN_NAME, mOid);
                 editor.apply();
 
-                progress.dismiss();
+            }else if (urlString.startsWith(NetworkConstants.GET_CLASS_STUDENTS)) {
+                mClassesLength--;
+                if (networkResult == null) {
+                    Log.i("Network", "Get Class Students API");
+                } else {
+                    try {
+                        JSONArray studentsArray = new JSONArray(networkResult);
+                        int stuArrayLength = studentsArray.length();
+                        if (stuArrayLength > 0) {
+                            ContentValues[] studentValues = new ContentValues[stuArrayLength];
+
+                            for (int student = 0; student < stuArrayLength; student++) {
+                                studentValues[student] = new ContentValues();
+                                studentValues[student].put("student_id", studentsArray.getJSONObject(student).getString("id"));
+                                studentValues[student].put("student_name", studentsArray.getJSONObject(student).getString("student_name"));
+                                int classLength = NetworkConstants.GET_CLASS_STUDENTS.length();
+                                int endUrlLength = urlString.lastIndexOf(".json");
+                                studentValues[student].put("class", urlString.substring(classLength, endUrlLength));
+                            }
+
+                            getContentResolver().bulkInsert(Uri.parse("content://com.education.schoolapp/class_students"), studentValues);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (mClassesLength == 0) {
+                    if (receivedMsgs != null && receivedMsgs.length > 0) {
+                        for (int msg = 0; msg < receivedMsgs.length; msg++) {
+                            networkConn.getMessage(receivedMsgs[msg]);
+                        }
+                    }
+                }
+            } else if (urlString.startsWith(NetworkConstants.GET_MESSAGE)) {
+                if (networkResult == null) {
+                    Log.i("Network", "Get Message API");
+                }
+                try {
+                    progress.setTitle("Fetching Data ... " + mCurrentMsg + "/" + mMessageFinalCount);
+                    JSONObject messageObj = new JSONObject(networkResult);
+                    String[] messageProjection = {"subject", "body", "sender_id", /*"start_date", "end_date", */"message_type"};
+                    JSONUtility jsonUtility = new JSONUtility();
+                    jsonUtility.setColumsList(messageProjection);
+
+                    ContentValues msgValues = jsonUtility.fromJSON(messageObj);
+                    msgValues.put("message_id", messageObj.getJSONObject("_id").getString("$oid"));
+
+                    JSONArray membersArray = messageObj.getJSONArray("member_ids");
+                    String[] memberIds = new String[membersArray.length()];
+                    String[] memberNames = new String[membersArray.length()];
+                    HashMap<String, String> mStudentsMap = new SchoolDataUtility().getClassStudents(getApplicationContext());
+                    if (mStudentsMap != null) {
+                        for (int i = 0; i < memberIds.length; i++) {
+                            memberIds[i] = membersArray.getJSONObject(i).getString("$oid");
+                            for (Map.Entry<String, String> entry : mStudentsMap.entrySet()) {
+                                if (entry.getValue().equals(memberIds[i])) {
+                                    System.out.println(entry.getKey());
+                                    memberNames[i] = entry.getKey();
+                                }
+                            }
+                        }
+                    }
+
+                    String memberIdString = Joiner.on(",").skipNulls().join(memberIds);
+                    msgValues.put("member_ids", memberIdString);
+                    msgValues.put("member_names", Joiner.on(",").skipNulls().join(memberNames));
+                    msgValues.put("sender_profile_image", Base64.decode(messageObj.getString("sender_profile_image"), 0));
+                    //TODO : To be fixed, get the sender name from the Message Response only
+                    msgValues.put("sender_name", new SchoolDataUtility().getTeacherNameforStudent(getApplicationContext(), mOid));
+
+                    getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
+
+                    ContentValues msgIdUpdate = new ContentValues();
+                    String selection = " message_id like '" + messageObj.getJSONObject("_id").getString("$oid") + "'";
+                    msgIdUpdate.put("status", 1);
+
+                    getContentResolver().update(Uri.parse("content://com.education.schoolapp/server_message_ids"), msgIdUpdate, selection, null);
+                    mMessageArrayLength--;
+                    mCurrentMsg++;
+
+                    if (mMessageArrayLength == 0) {
+                        launhHomeActivity();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
-            launhHomeActivity();
         }
     }
 
@@ -262,6 +367,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void launhHomeActivity() {
+        progress.dismiss();
+
         Intent homeIntent = new Intent(this, HomeMainActivity.class);
         homeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         homeIntent.putExtra("class", mClassName);
