@@ -1,19 +1,15 @@
 package com.education.schoolapp;
 
-import android.app.AlarmManager;
 import android.app.DatePickerDialog;
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,14 +23,24 @@ import android.widget.RadioGroup;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import com.education.service.schoolapp.NotificationReceiver;
+import com.education.connection.schoolapp.JSONUtility;
+import com.education.connection.schoolapp.NetworkConnectionUtility;
+import com.education.connection.schoolapp.NetworkConstants;
+import com.education.database.schoolapp.SchoolDataUtility;
 
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 public class ComposeActivity extends AppCompatActivity implements View.OnClickListener {
 
+    private static final String TAG = ComposeActivity.class.toString();
     private EditText mTitleView;
     private EditText mDescView;
     private MultiAutoCompleteTextView mToView;
@@ -63,10 +69,19 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
     private int mSelectedMinute;
     private RadioGroup mRadioCompose;
 
+    private static final int MIN_NUM = 1;
+    private static final int MAX_NUM = 1000;
+    private NetworkConnectionUtility networkConn;
+    private int mComposeMessageId;
+    private HashMap<String, String> mStudentsMap;
+    private ArrayAdapter<String> adapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+        /*getActionBar().setHomeButtonEnabled(true);
+        getActionBar().setIcon(R.drawable.school_logo);*/
         setContentView(R.layout.compose_view);
 
         mToView = (MultiAutoCompleteTextView) findViewById(R.id.msg_to);
@@ -78,7 +93,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
         mTimePick = (Button) findViewById(R.id.time_button);
 
         mType = getIntent().getIntExtra("Type", -1);
-        if (mType == 1) {
+        if (mType == 2) {
             mDateTimeLayout.setVisibility(View.VISIBLE);
         }
 
@@ -93,14 +108,22 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
         }
 
         mToView.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
-        ArrayList<String> emailAddressCollection = new ArrayList<String>();
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<String>(ComposeActivity.this,
-                        android.R.layout.simple_spinner_dropdown_item, getResources().getStringArray(R.array.toList));
 
-        adapter.setDropDownViewResource(android.R.layout.simple_expandable_list_item_1);
-        mToView.setThreshold(1);
-        mToView.setAdapter(adapter);
+        mStudentsMap = new SchoolDataUtility().getClassStudents(this);
+        if (mStudentsMap != null) {
+            String[] studentArray = new String[mStudentsMap.size()];
+            int idx = 0;
+
+            for (Map.Entry<String, String> mapEntry : mStudentsMap.entrySet()) {
+                studentArray[idx] = mapEntry.getKey();
+                idx++;
+            }
+            adapter =
+                    new ArrayAdapter<String>(ComposeActivity.this,
+                            android.R.layout.simple_spinner_dropdown_item, studentArray);
+
+            adapter.setDropDownViewResource(android.R.layout.simple_expandable_list_item_1);
+        }
 
         mRadioCompose = (RadioGroup) findViewById(R.id.radio_compose);
         mRadioCompose.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -117,6 +140,14 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
                 }
             }
         });
+
+        if (!mIsTeacher) {
+            mRadioCompose.setVisibility(View.GONE);
+            mToView.setText("Teacher");
+        } else {
+            mToView.setThreshold(1);
+            mToView.setAdapter(adapter);
+        }
     }
 
     @Override
@@ -131,6 +162,19 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
             handleSendMessage();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private int randInt() {
+
+        // NOTE: Usually this should be a field rather than a method
+        // variable so that it is not re-seeded every call.
+        Random rand = new Random();
+
+        // nextInt is normally exclusive of the top value,
+        // so add 1 to make it inclusive
+        int randomNum = rand.nextInt((MAX_NUM - MIN_NUM) + 1) + MIN_NUM;
+
+        return randomNum;
     }
 
     private void handleSendMessage() {
@@ -157,7 +201,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
             return;
         }
 
-        if (mType == 1) {
+        if (mType == 2) {
             String textDate = mDatePick.getText().toString();
             String textTime = mTimePick.getText().toString();
             if (textDate.equalsIgnoreCase("Set Date") || textTime.equalsIgnoreCase("Set Time")) {
@@ -165,9 +209,70 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
                 return;
             }
         }
+        networkConn = new NetworkConnectionUtility();
 
-        ContentValues msgValues = new ContentValues();
-        msgValues.put("to_name", textTo.substring(5));
+        NetworkResp networkResp = new NetworkResp();
+        networkConn.setNetworkListener(networkResp);
+
+        String[] toStringArray = (String[]) Arrays.asList(textTo.split(",")).toArray();
+        JSONArray toSenderIds = new JSONArray();
+        for (int i = 0; i < toStringArray.length-1; i++) {
+            toSenderIds.put(mStudentsMap.get(toStringArray[i]));
+        }
+        c.set(mSelectedYear, mSelectedMonth, mSelectedDay, mSelectedHour, mSelectedMinute);
+
+        JSONObject compJsonObj = new JSONObject();
+        JSONObject msgJsonObj = new JSONObject();
+        try {
+            compJsonObj.put("subject", textTitle);
+            compJsonObj.put("body", textDesc);
+            compJsonObj.put("message_type", mType);
+            compJsonObj.put("sender_id", mLoginName);
+            compJsonObj.put("sender_profile_image", Base64.encodeToString(new SchoolDataUtility(mLoginName, true).getMemberProfilePic(this), 0));
+            if (mType == 2) {
+                compJsonObj.put("start_date", c.getTimeInMillis());
+                compJsonObj.put("end_date", c.getTimeInMillis() + 10000);
+            } else if (mType == 1) {
+                compJsonObj.put("start_date", System.currentTimeMillis());
+            }
+            compJsonObj.put("member_ids", toSenderIds);
+            msgJsonObj.put("message", compJsonObj);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        networkConn.postMessage(msgJsonObj.toString());
+
+        JSONUtility jsonUtility = new JSONUtility();
+        String[] composeColumns = {"subject", "body", "message_type", "sender_id", "start_date", "end_date", "member_ids"};
+        jsonUtility.setColumsList(composeColumns);
+
+        try {
+            ContentValues msgValues = jsonUtility.fromJSON(compJsonObj);
+            mComposeMessageId = randInt();
+            msgValues.remove("sender_profile_image");
+            msgValues.put("sender_profile_image", new SchoolDataUtility(mLoginName, true).getMemberProfilePic(this));
+            msgValues.put("local_msg_id", mComposeMessageId);
+            msgValues.put("member_names", textTo);
+            msgValues.put("sender_name", new SchoolDataUtility(mLoginName, true).getStudentName(this)[0]);
+
+            getContentResolver().insert(Uri.parse("content://com.education.schoolapp/sent_messages_all"), msgValues);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        /*ContentValues msgValues = new ContentValues();
+        msgValues.put("subject", textTitle);
+        msgValues.put("body", textDesc);
+        msgValues.put("type", mType);
+        msgValues.put("sender_id", mLoginName);
+        msgValues.put("sender_profile_image", new SchoolDataUtility().getMemberProfilePic(this, mLoginName));
+        msgValues.put("start_date", c.getTimeInMillis());
+        msgValues.put("end_date", c.getTimeInMillis() + 10000);
+        msgValues.put("member_ids", String.valueOf(toStringArray));
+
+        msgValues.put("msg_id", randInt());
+        msgValues.put("to_name", textTo);
         if (mIsTeacher) {
             msgValues.put("from_name", getResources().getString(R.string.teacher_name));
             Bitmap proBitmap = null;
@@ -236,7 +341,33 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
             getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages"), msgValues);
             Toast.makeText(getApplicationContext(), "Message has been sent Successfully", Toast.LENGTH_SHORT).show();
         }
-        finish();
+        finish();*/
+    }
+
+    private class NetworkResp implements NetworkConnectionUtility.NetworkResponseListener {
+        @Override
+        public void onResponse(String urlString, String networkResult) {
+            if (urlString.equalsIgnoreCase(NetworkConstants.POST_MESSAGE)) {
+                ContentValues msgRespValues = new ContentValues();
+                String selection = " local_msg_id = " + mComposeMessageId;
+                if (networkResult == null || networkResult.equalsIgnoreCase("Bad Request")) {
+                    msgRespValues.put("status", 2);
+                } else {
+
+                    Log.i(TAG, "Post message is successfully done");
+                    try {
+                        JSONObject respObj = new JSONObject(networkResult);
+
+                        msgRespValues.put("message_id", respObj.getString("$oid"));
+                        msgRespValues.put("status", 1);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                getContentResolver().update(Uri.parse("content://com.education.schoolapp/sent_messages_all"), msgRespValues, selection, null);
+                finish();
+            }
+        }
     }
 
     @Override

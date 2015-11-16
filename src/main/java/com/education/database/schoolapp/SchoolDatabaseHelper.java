@@ -24,6 +24,10 @@ public class SchoolDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(SchoolDataConstants.CREATE_SENT_NOTIFICATIONS);
         db.execSQL(SchoolDataConstants.CREATE_ALBUM_DETAILS);
         db.execSQL(SchoolDataConstants.CREATE_ALBUM_DATA);
+        db.execSQL(SchoolDataConstants.CREATE_SERVER_MESSAGE_IDS);
+        db.execSQL(SchoolDataConstants.CREATE_CLASS_STUDENTS);
+        db.execSQL(SchoolDataConstants.CREATE_SENT_MESSAGES_ALL);
+        db.execSQL(SchoolDataConstants.CREATE_RECEIVED_MESSAGES_ALL);
     }
 
     @Override

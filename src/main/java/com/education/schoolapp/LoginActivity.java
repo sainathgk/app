@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -24,11 +25,13 @@ import android.widget.Toast;
 
 import com.education.connection.schoolapp.JSONUtility;
 import com.education.connection.schoolapp.NetworkConnectionUtility;
+import com.education.connection.schoolapp.NetworkConstants;
 import com.education.service.schoolapp.QuickstartPreferences;
 import com.education.service.schoolapp.RegistrationIntentService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -55,6 +58,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private BroadcastReceiver mRegistrationReceiver;
     private ProgressDialog progress;
     private NetworkConnectionUtility networkConn;
+    private String mOid;
+    private String mClassName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,10 +123,73 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         public void onResponse(String urlString, String networkResult) {
             //Toast.makeText(getApplicationContext(), "Posted Successfully " + networkResult, Toast.LENGTH_SHORT).show();
             if (networkResult == null) {
+                progress.setTitle("Failed");
+                progress.dismiss();
                 return;
             }
             //TODO : Add user profile data to DB.
-            progress.dismiss();
+            if (urlString.equalsIgnoreCase(NetworkConstants.AUTHENTICATE)) {
+                int userType = -1;
+                JSONUtility jsonUtility = new JSONUtility();
+                String[] loginColumns = {"member_name", "dob", "age", "blood_group", "standards", "section",
+                                         "father_name", "father_contact_num", "father_email", "mother_name", "mother_contact_num", "mother_email",
+                                         "guardian_name", "guardian_contact_num", "guardian_email", "mentor_name", "mentor_contact_num", "mentor_email",
+                                         "loginid", "gcmid", "role", "subjects"};
+
+                jsonUtility.setColumsList(loginColumns);
+                ContentValues userValues = null;
+                try {
+                    JSONObject userJsonObj = new JSONObject(networkResult);
+                    userValues = jsonUtility.fromJSON(userJsonObj);
+                    mOid = userJsonObj.getJSONObject("_id").getString("$oid");
+                    userValues.put("oid", mOid);
+                    userValues.put("profile_pic", Base64.decode(userJsonObj.getString("profile_pic"), 0));
+                    userType = userJsonObj.getInt("role");
+                    getContentResolver().insert(Uri.parse("content://com.education.schoolapp/user_profile"), userValues);
+
+                    mClassName = userJsonObj.getString("standards");
+
+                    //userJsonObj.optJSONArray("messages")
+                    JSONArray messageArray = userJsonObj.getJSONArray("messages");
+                    int msgArrayLength = messageArray.length();
+                    if (msgArrayLength > 0) {
+                        ContentValues[] msgIdValues = new ContentValues[msgArrayLength];
+                        for (int msgId = 0; msgId < msgArrayLength; msgId++) {
+                            JSONObject msgIdObj = messageArray.getJSONObject(msgId);
+                            msgIdValues[msgId] = new ContentValues();
+                            msgIdValues[msgId].put("message_id", msgIdObj.getJSONObject("_id").getString("$oid"));
+                            msgIdValues[msgId].put("message_type", msgIdObj.getString("message_type"));
+                        }
+                        getContentResolver().bulkInsert(Uri.parse("content://com.education.schoolapp/server_message_ids"), msgIdValues);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    progress.setTitle("Failed");
+                }
+
+                SharedPreferences sharePrefs = getApplicationContext().getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
+
+                SharedPreferences.Editor editor = sharePrefs.edit();
+                editor.putBoolean(SHARED_LOGIN_KEY, true);
+                switch (userType) {
+                    case 0:
+                        mLoginType = "Admin";
+                        break;
+
+                    case 1:
+                        mLoginType = "Parent";
+                        break;
+
+                    case 2:
+                        mLoginType = "Teacher";
+                        break;
+                }
+                editor.putString(SHARED_LOGIN_TYPE, mLoginType);
+                editor.putString(SHARED_LOGIN_NAME, mOid);
+                editor.apply();
+
+                progress.dismiss();
+            }
             launhHomeActivity();
         }
     }
@@ -154,28 +222,29 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             return;
         }
 
+        progress.setTitle("Authenticating ...");
         progress.show();
 
         int mSelectedRadioId = mRadioLayout.getCheckedRadioButtonId();
         switch (mSelectedRadioId) {
             case R.id.parent_radioButton:
                 mLoginType = "Parent";
-                addStudentDetails(userNameText);
+                //addStudentDetails(userNameText);
                 break;
 
             case R.id.teacher_radioButton2:
                 mLoginType = "Teacher";
-                userNameText = getResources().getString(R.string.teacher_name);
+                //userNameText = getResources().getString(R.string.teacher_name);
                 break;
         }
 
-        SharedPreferences sharePrefs = getApplicationContext().getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
+        /*SharedPreferences sharePrefs = getApplicationContext().getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
 
         SharedPreferences.Editor editor = sharePrefs.edit();
         editor.putBoolean(SHARED_LOGIN_KEY, true);
         editor.putString(SHARED_LOGIN_TYPE, mLoginType);
         editor.putString(SHARED_LOGIN_NAME, userNameText.toLowerCase());
-        editor.apply();
+        editor.apply();*/
 
         //DB insert of all these Values
         ContentValues loginValues = new ContentValues();
@@ -195,6 +264,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private void launhHomeActivity() {
         Intent homeIntent = new Intent(this, HomeMainActivity.class);
         homeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        homeIntent.putExtra("class", mClassName);
         startActivity(homeIntent);
         finish();
     }

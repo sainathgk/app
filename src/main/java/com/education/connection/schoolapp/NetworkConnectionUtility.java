@@ -34,18 +34,31 @@ public class NetworkConnectionUtility {
 
     }
 
+    public void getStudents(String className) {
+        if (NetworkConstants.isServerON) {
+            new AsyncNetwork().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "GET", NetworkConstants.GET_CLASS_STUDENTS + className + ".json");
+        }
+    }
+
     public void postMessage(String messagePayload) {
         if (NetworkConstants.isServerON) {
-            Log.i(TAG, "Post Message API");
-            new AsyncNetwork().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "POST", messagePayload);
+            Log.i(TAG, "Post Message API" + messagePayload);
+            new AsyncNetwork().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "SEARCH", NetworkConstants.POST_MESSAGE, messagePayload);
         }
 
-        new Thread(new Runnable() {
+        /*new Thread(new Runnable() {
             @Override
             public void run() {
 
             }
-        }).run();
+        }).run();*/
+    }
+
+    public void getMessage(String messageId) {
+        if (NetworkConstants.isServerON) {
+            Log.i(TAG, "Get Message API for Message ID : " + messageId);
+            new AsyncNetwork().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "GET", NetworkConstants.GET_MESSAGE + messageId + ".json");
+        }
     }
 
     public interface NetworkResponseListener {

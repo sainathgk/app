@@ -1,6 +1,8 @@
 package com.education.schoolapp;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -28,20 +30,35 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.education.connection.schoolapp.JSONUtility;
+import com.education.connection.schoolapp.NetworkConnectionUtility;
+import com.education.connection.schoolapp.NetworkConstants;
 import com.education.database.schoolapp.SchoolDataUtility;
 import com.education.service.schoolapp.SchoolDataContentObserver;
+import com.google.common.base.Joiner;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HomeMainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -76,6 +93,9 @@ public class HomeMainActivity extends AppCompatActivity
     private ImageView mNavProfileImage;
 
     int REQUEST_CAMERA = 0, SELECT_FILE = 1;
+    private NetworkConnectionUtility networkConn;
+    private ProgressDialog progress;
+    private String[] toStringArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +118,7 @@ public class HomeMainActivity extends AppCompatActivity
                 if (mViewPager.getCurrentItem() > 1) {
                     composeType = -1;
                 }
-                composeIntent.putExtra("Type", composeType);
+                composeIntent.putExtra("Type", composeType + 1);
                 startActivity(composeIntent);
 
                 /*Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
@@ -134,10 +154,10 @@ public class HomeMainActivity extends AppCompatActivity
                 //Hide the Student profile item from Navigation drawer.
                 navigationView.getMenu().findItem(R.id.nav_student_profile).setVisible(false);
                 navigationView.getMenu().findItem(R.id.nav_saved_messages).setTitle("Outbox Messages");
-                mNavLoginName.setText(getResources().getString(R.string.teacher_name));
+                /*mNavLoginName.setText(getResources().getString(R.string.teacher_name));
                 mNavClassName.setText("Class Teacher : UKG");
-                mNavProfileImage.setImageBitmap(GetBitmapClippedCircle(BitmapFactory.decodeResource(getResources(), R.drawable.teacher_)));
-            } else {
+                mNavProfileImage.setImageBitmap(GetBitmapClippedCircle(BitmapFactory.decodeResource(getResources(), R.drawable.teacher_)));*/
+            } /*else {
                 String[] studentDetails = new SchoolDataUtility(mLoginName, false).getStudentName(this);
 
                 mNavLoginName.setText(studentDetails[0]);
@@ -147,9 +167,17 @@ public class HomeMainActivity extends AppCompatActivity
                 } else {
                     mNavProfileImage.setImageBitmap(GetBitmapClippedCircle(BitmapFactory.decodeResource(getResources(), R.drawable.student)));
                 }
-            }
+            }*/
+            SchoolDataUtility schoolData = new SchoolDataUtility(mLoginName, false);
 
+            String[] studentDetails = schoolData.getStudentName(this);
+            byte[] profilePic = schoolData.getMemberProfilePic(this);
+
+            mNavLoginName.setText(studentDetails[0]);
+            mNavClassName.setText("Class : " + studentDetails[1]);
+            mNavProfileImage.setImageBitmap(BitmapFactory.decodeByteArray(profilePic, 0, profilePic.length));
         }
+
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -191,6 +219,115 @@ public class HomeMainActivity extends AppCompatActivity
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
+
+        progress = new ProgressDialog(this);
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setIndeterminate(true);
+        progress.setTitle("Fetching Data ...");
+        progress.show();
+
+        networkConn = new NetworkConnectionUtility();
+
+        NetworkResp networkResp = new NetworkResp();
+        networkConn.setNetworkListener(networkResp);
+
+        if (mIsTeacher) {
+            String className = getIntent().getStringExtra("class");
+            if (className == null) {
+                progress.dismiss();
+                return;
+            }
+            toStringArray = (String[]) Arrays.asList(className.split(",")).toArray();
+
+            for (int clas = 0; clas < toStringArray.length; clas++)
+                networkConn.getStudents(toStringArray[clas]);
+        }
+
+        String[] receivedMsgs = new SchoolDataUtility().getPendingMessages(this);
+        for (int msg = 0; msg < receivedMsgs.length; msg++) {
+            progress.show();
+            networkConn.getMessage(receivedMsgs[msg]);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    private class NetworkResp implements NetworkConnectionUtility.NetworkResponseListener {
+        @Override
+        public void onResponse(String urlString, String networkResult) {
+            if (urlString.startsWith(NetworkConstants.GET_CLASS_STUDENTS)) {
+                if (networkResult == null) {
+                    Log.i("Network", "Get Class Students API");
+                    return;
+                }
+                try {
+                    JSONArray studentsArray = new JSONArray(networkResult);
+                    int stuArrayLength = studentsArray.length();
+                    if (stuArrayLength > 0) {
+                        ContentValues[] studentValues = new ContentValues[stuArrayLength];
+
+                        for (int student = 0; student < stuArrayLength; student++) {
+                            studentValues[student] = new ContentValues();
+                            studentValues[student].put("student_id", studentsArray.getJSONObject(student).getString("id"));
+                            studentValues[student].put("student_name", studentsArray.getJSONObject(student).getString("student_name"));
+                            int classLength = NetworkConstants.GET_CLASS_STUDENTS.length();
+                            int endUrlLength = urlString.lastIndexOf(".json");
+                            studentValues[student].put("class", urlString.substring(classLength, endUrlLength));
+                        }
+
+                        getContentResolver().bulkInsert(Uri.parse("content://com.education.schoolapp/class_students"), studentValues);
+                        progress.dismiss();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } else if (urlString.startsWith(NetworkConstants.GET_MESSAGE)) {
+                if (networkResult == null) {
+                    Log.i("Network", "Get Message API");
+                    return;
+                }
+                try {
+                    JSONObject messageObj = new JSONObject(networkResult);
+                    String[] messageProjection = {"subject","body", "sender_id", /*"start_date", "end_date", */"message_type"};
+                    JSONUtility jsonUtility = new JSONUtility();
+                    jsonUtility.setColumsList(messageProjection);
+
+                    ContentValues msgValues = jsonUtility.fromJSON(messageObj);
+                    msgValues.put("message_id", messageObj.getJSONObject("_id").getString("$oid"));
+
+                    JSONArray membersArray = messageObj.getJSONArray("member_ids");
+                    String[] memberIds = new String[membersArray.length()];
+                    String[] memberNames = new String[membersArray.length()];
+                    HashMap<String, String> mStudentsMap = new SchoolDataUtility().getClassStudents(getApplicationContext());
+                    if (mStudentsMap != null) {
+                        for (int i = 0; i < memberIds.length; i++) {
+                            memberIds[i] = membersArray.getJSONObject(i).getString("$oid");
+                            for (Map.Entry<String, String> entry : mStudentsMap.entrySet()) {
+                                if (entry.getValue().equals(memberIds[i])) {
+                                    System.out.println(entry.getKey());
+                                    memberNames[i] = entry.getKey();
+                                }
+                            }
+                        }
+                    }
+
+                    String memberIdString = Joiner.on(",").skipNulls().join(memberIds);
+                    msgValues.put("member_ids", memberIdString);
+                    msgValues.put("member_names", Joiner.on(",").skipNulls().join(memberNames));
+                    msgValues.put("sender_profile_image", Base64.decode(messageObj.getString("sender_profile_image"), 0));
+                    //TODO : To be fixed, get the sender name from the Message Response only
+                    msgValues.put("sender_name", new SchoolDataUtility().getTeacherNameforStudent(getApplicationContext(), mLoginName));
+
+                    getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
+                    progress.dismiss();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     @Override
@@ -205,6 +342,9 @@ public class HomeMainActivity extends AppCompatActivity
 
     public static Bitmap GetBitmapClippedCircle(Bitmap bitmap) {
 
+        if (bitmap == null) {
+            return null;
+        }
         final int width = bitmap.getWidth();
         final int height = bitmap.getHeight();
         final Bitmap outputBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -217,6 +357,24 @@ public class HomeMainActivity extends AppCompatActivity
         canvas.clipPath(path);
         canvas.drawBitmap(bitmap, 0, 0, null);
         return outputBitmap;
+    }
+
+    public static String getDateString(String timeMilliSeconds) {
+        if (timeMilliSeconds == null || timeMilliSeconds.equalsIgnoreCase("null"))
+            return "";
+
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
+
+        Calendar calendar = Calendar.getInstance();
+        try {
+            Long mLongTime = Long.parseLong(timeMilliSeconds);
+            calendar.setTimeInMillis(mLongTime);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            return "";
+        }
+
+        return dateFormatter.format(calendar.getTime());
     }
 
 
@@ -319,8 +477,8 @@ public class HomeMainActivity extends AppCompatActivity
     }
 
     private void selectImage() {
-        final CharSequence[] items = { "Take Photo", "Choose from Library",
-                "Cancel" };
+        final CharSequence[] items = {"Take Photo", "Choose from Library",
+                "Cancel"};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add Photo!");
@@ -385,7 +543,7 @@ public class HomeMainActivity extends AppCompatActivity
     @SuppressWarnings("deprecation")
     private void onSelectFromGalleryResult(Intent data) {
         Uri selectedImageUri = data.getData();
-        String[] projection = { MediaStore.MediaColumns.DATA };
+        String[] projection = {MediaStore.MediaColumns.DATA};
         Cursor cursor = managedQuery(selectedImageUri, projection, null, null,
                 null);
         int column_index = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);

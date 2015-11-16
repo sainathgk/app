@@ -81,6 +81,7 @@ public class ProfileScrollingActivity extends AppCompatActivity {
                 mFatherView.setText(mProfileDetails.studentFatherName);
                 mMotherView.setText(mProfileDetails.studentMotherName);
                 mGuardianView.setText(mProfileDetails.studentGuardianName);
+                mTeacherView.setText(mProfileDetails.studentTeacherName);
                 mProfileImageView.setImageBitmap(mProfileDetails.studentImage);
             }
         }

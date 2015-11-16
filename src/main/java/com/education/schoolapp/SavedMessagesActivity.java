@@ -80,12 +80,12 @@ public class SavedMessagesActivity extends AppCompatActivity {
                 Intent composeIntent = new Intent(getBaseContext(), ComposeActivity.class);
                 if (mIsTeacher) {
                     if (mViewPager.getCurrentItem() == 0) {
-                        composeIntent.putExtra("Type", 1);
+                        composeIntent.putExtra("Type", 2);
                     } else {
-                        composeIntent.putExtra("Type", 0);
+                        composeIntent.putExtra("Type", 1);
                     }
                 } else {
-                    composeIntent.putExtra("Type", 0);
+                    composeIntent.putExtra("Type", 1);
                 }
                 startActivity(composeIntent);
                 /*Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)

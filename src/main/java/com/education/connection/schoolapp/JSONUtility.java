@@ -1,4 +1,5 @@
 package com.education.connection.schoolapp;
+
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.util.Base64;
@@ -15,8 +16,7 @@ public class JSONUtility {
     private static final String TAG = "JSONParser";
     private String[] mColumns = null;
 
-    public void setColumsList(final String[] columnList)
-    {
+    public void setColumsList(final String[] columnList) {
         mColumns = columnList;
     }
 
@@ -25,7 +25,7 @@ public class JSONUtility {
 
         for (String column : mColumns) {
             final int columnIndex = cursor.getColumnIndex(column);
-            if(columnIndex == -1)continue;
+            if (columnIndex == -1) continue;
             switch (cursor.getType(columnIndex)) {
                 case Cursor.FIELD_TYPE_BLOB:
                     final byte[] temp = cursor.getBlob(columnIndex);
@@ -52,42 +52,39 @@ public class JSONUtility {
         return jsonObj;
     }
 
-    public ContentValues fromJSONString(final String jsonString) throws JSONException
-    {
+    public ContentValues fromJSONString(final String jsonString) throws JSONException {
         String value = null;
         final ContentValues contentValues = new ContentValues();
 
         final JSONObject jsonObject = (JSONObject) new JSONTokener(jsonString).nextValue();
 
         for (String column : mColumns) {
-            try{
-                if(jsonObject.has(column))
-                {
+            try {
+                if (jsonObject.has(column)) {
                     value = jsonObject.getString(column);
                     contentValues.put(column, value);
                 }
 
-            }catch (JSONException e) {
+            } catch (JSONException e) {
                 e.printStackTrace();
                 continue;
             }
         }
         return contentValues;
     }
-    public ContentValues fromJSON(final JSONObject jsonObject) throws JSONException
-    {
+
+    public ContentValues fromJSON(final JSONObject jsonObject) throws JSONException {
         String value = null;
         final ContentValues contentValues = new ContentValues();
 
         for (String column : mColumns) {
-            try{
-                if(jsonObject.has(column))
-                {
+            try {
+                if (jsonObject.has(column)) {
                     value = jsonObject.getString(column);
                     contentValues.put(column, value);
                 }
 
-            }catch (JSONException e) {
+            } catch (JSONException e) {
                 e.printStackTrace();
                 continue;
             }

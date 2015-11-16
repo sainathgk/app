@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.education.schoolapp">
+    package="com.education.schoolapp" >
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -13,6 +13,7 @@
     <permission
         android:name="com.education.schoolapp.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
+
     <uses-permission android:name="com.education.schoolapp.permission.C2D_MESSAGE" />
 
     <application
@@ -20,7 +21,7 @@
         android:icon="@drawable/school_logo"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme" >
         <activity
             android:name=".HomeMainActivity"
             android:icon="@drawable/school_logo"
@@ -30,7 +31,7 @@
             android:name=".ProfileScrollingActivity"
             android:label=" "
             android:parentActivityName=".HomeMainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.education.schoolapp.HomeMainActivity" />
@@ -42,7 +43,7 @@
             android:name=".SavedMessagesActivity"
             android:label="@string/title_activity_saved_messages"
             android:parentActivityName=".HomeMainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.education.schoolapp.HomeMainActivity" />
@@ -57,7 +58,7 @@
             android:name=".LoginActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_login"
-            android:theme="@style/FullscreenTheme"></activity>
+            android:theme="@style/FullscreenTheme"/>
         <activity
             android:name=".WelcomeActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -72,10 +73,12 @@
         </activity>
         <activity
             android:name=".ComposeActivity"
-            android:label="Compose"></activity>
+            android:label="Compose" />
+
+        <activity android:name=".MessageViewActivity">
+        </activity>
 
         <receiver android:name="com.education.service.schoolapp.NotificationReceiver" />
-
         <receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"
             android:permission="com.google.android.c2dm.permission.SEND" >
@@ -83,26 +86,28 @@
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
                 <!-- for Gingerbread GSF backward compat -->
                 <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+
                 <category android:name="com.education.service.schoolapp" />
             </intent-filter>
         </receiver>
 
-        <service android:name="com.education.service.schoolapp.GcmService" android:exported="false">
+        <service
+            android:name="com.education.service.schoolapp.GcmService"
+            android:exported="false" >
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
             </intent-filter>
         </service>
-
         <service
             android:name="com.education.service.schoolapp.MyInstanceIDListenerService"
-            android:exported="false">
+            android:exported="false" >
             <intent-filter>
-                <action android:name="com.google.android.gms.iid.InstanceID"/>
+                <action android:name="com.google.android.gms.iid.InstanceID" />
             </intent-filter>
         </service>
-
-        <service android:name="com.education.service.schoolapp.RegistrationIntentService"
-            android:exported="false"/>
+        <service
+            android:name="com.education.service.schoolapp.RegistrationIntentService"
+            android:exported="false" />
     </application>
 
 </manifest>
