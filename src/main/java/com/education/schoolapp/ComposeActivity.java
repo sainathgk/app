@@ -77,6 +77,11 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
     private HashMap<String, String> mStudentsMap;
     private ArrayAdapter<String> adapter;
     private String[] mStudentIdArray;
+    private String mTitle;
+    private String mDescription;
+    private String mToText;
+    private String mFromText;
+    private String mComposeType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,6 +102,49 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
         mType = getIntent().getIntExtra("Type", -1);
         if (mType == 2) {
             mDateTimeLayout.setVisibility(View.VISIBLE);
+        }
+
+        mRadioCompose = (RadioGroup) findViewById(R.id.radio_compose);
+
+        String msgBox = getIntent().getStringExtra("msg_box");
+        String msgId = getIntent().getStringExtra("msg_id");
+        mComposeType = getIntent().getStringExtra("compose_type");
+
+        if (msgBox != null && msgId != null) {
+
+            String msgItem = new SchoolDataUtility().getMessage(this.getApplicationContext(), msgBox, mType, msgId);
+            if (msgItem == null) {
+                Toast.makeText(getApplicationContext(), "Message is null", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
+
+            mRadioCompose.setVisibility(View.GONE);
+
+            try {
+                JSONObject msgJsonObj = new JSONObject(msgItem);
+                if (!msgJsonObj.optString("subject").isEmpty()) {
+                    mTitle = msgJsonObj.getString("subject");
+                }
+                mTitleView.setText(mTitle);
+                if (!msgJsonObj.optString("body").isEmpty()) {
+                    mDescription = msgJsonObj.getString("body");
+                }
+
+                mDescView.setText(mDescription);
+                mToText = msgJsonObj.getString("member_names");
+                mFromText = msgJsonObj.getString("sender_name");
+
+                if (mComposeType.equalsIgnoreCase("reply")) {
+                    mToView.setText(mFromText);
+                } else if (mComposeType.equalsIgnoreCase("replyAll")) {
+                    mToView.setText(mFromText + ", " + mToText);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "JSON Exception", Toast.LENGTH_SHORT).show();
+            }
+
         }
 
         mDatePick.setOnClickListener(this);
@@ -128,7 +176,6 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
             adapter.setDropDownViewResource(android.R.layout.simple_expandable_list_item_1);
         }
 
-        mRadioCompose = (RadioGroup) findViewById(R.id.radio_compose);
         mRadioCompose.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -182,6 +229,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
 
     private void handleSendMessage() {
         String textTo = Joiner.on(",").skipNulls().join(mStudentIdArray);
+
         if (mRadioCompose.getCheckedRadioButtonId() == R.id.individual_radioButton2) {
             textTo = mToView.getText().toString();
             if (textTo.isEmpty()) {
@@ -215,7 +263,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
 
         String[] toStringArray = (String[]) Arrays.asList(textTo.split(",")).toArray();
         JSONArray toSenderIds = new JSONArray();
-        for (int i = 0; i < toStringArray.length-1; i++) {
+        for (int i = 0; i < toStringArray.length - 1; i++) {
             toSenderIds.put(mStudentsMap.get(toStringArray[i]));
         }
         c.set(mSelectedYear, mSelectedMonth, mSelectedDay, mSelectedHour, mSelectedMinute);

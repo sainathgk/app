@@ -85,16 +85,14 @@ public class MessagesFragment extends Fragment{
         mListAdapter = new MessagesListAdapter(this.getContext(), mParam1, mParam2, mParam3);
         mRecyclerListView.setAdapter(mListAdapter);
 
-        //mRecyclerListView.addOnItemTouchListener(this);
-
         return rootView;
     }
 
     @Override
     public void onResume() {
+        super.onResume();
         mListAdapter.notifyDataSetChanged();
         mRecyclerListView.invalidate();
-        super.onResume();
     }
 
     // TODO: Rename method, update argument and hook method into UI event

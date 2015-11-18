@@ -1,6 +1,7 @@
 package com.education.schoolapp;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -38,6 +39,7 @@ public class MessageViewActivity extends AppCompatActivity {
     private String mFromText;
     private String msgBox;
     private String msgId;
+    private int msgType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +51,7 @@ public class MessageViewActivity extends AppCompatActivity {
 
         msgId = getIntent().getStringExtra("msg_id");
         msgBox = getIntent().getStringExtra("msg_box");
-        int msgType = getIntent().getIntExtra("msg_type", 1);
+        msgType = getIntent().getIntExtra("msg_type", 1);
 
         mTitleView = (TextView) findViewById(R.id.message_title);
         mMessageBoxView = (TextView) findViewById(R.id.message_box);
@@ -109,14 +111,25 @@ public class MessageViewActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.message_detail, menu);
-        if (msgBox.equalsIgnoreCase("Saved")) {
+        if (msgBox.equalsIgnoreCase("Saved") || msgBox.equalsIgnoreCase("Outbox")) {
             menu.findItem(R.id.action_save).setVisible(false);
+        }
+        if (msgType == 2) {
+            menu.findItem(R.id.action_save).setVisible(false);
+            menu.findItem(R.id.action_calendar).setVisible(true);
+            menu.findItem(R.id.action_reply).setVisible(false);
+            menu.findItem(R.id.action_reply_all).setVisible(false);
         }
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Intent replyIntent = new Intent(getApplicationContext(), ComposeActivity.class);
+        replyIntent.putExtra("msg_id", msgId);
+        replyIntent.putExtra("msg_box", msgBox);
+        replyIntent.putExtra("Type", msgType);
+
         switch (item.getItemId()) {
             case R.id.action_save:
                 ContentValues msgUpdate = new ContentValues();
@@ -129,9 +142,13 @@ public class MessageViewActivity extends AppCompatActivity {
                 break;
 
             case R.id.action_reply:
+                replyIntent.putExtra("compose_type", "reply");
+                startActivity(replyIntent);
                 break;
 
             case R.id.action_reply_all:
+                replyIntent.putExtra("compose_type", "replyAll");
+                startActivity(replyIntent);
                 break;
 
             case R.id.action_delete:
@@ -139,6 +156,16 @@ public class MessageViewActivity extends AppCompatActivity {
                 String delete_selection = "message_id like '" + msgId + "'";
 
                 getContentResolver().delete(Uri.parse("content://com.education.schoolapp/received_messages_all"), delete_selection, null);
+                break;
+
+            case R.id.action_calendar:
+                Intent intent = new Intent(Intent.ACTION_EDIT);
+                intent.setType("vnd.android.cursor.item/event");
+                intent.putExtra("beginTime", mDate);
+                intent.putExtra("endTime", mDate + 60 * 60 * 1000);
+                intent.putExtra("title", mTitle);
+                intent.putExtra("description", mDescription);
+                startActivity(intent);
                 break;
         }
 
