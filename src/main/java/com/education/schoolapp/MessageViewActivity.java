@@ -33,7 +33,7 @@ public class MessageViewActivity extends AppCompatActivity {
 
     private String mTitle;
     private String mDescription;
-    private String mDate;
+    private long mDate;
     private Bitmap mSenderImage;
     private String mToText;
     private String mFromText;
@@ -78,7 +78,7 @@ public class MessageViewActivity extends AppCompatActivity {
                 mDescription = msgJsonObj.getString("body");
             }
             if (!msgJsonObj.optString("start_date").isEmpty()) {
-                mDate = msgJsonObj.getString("start_date");
+                mDate = msgJsonObj.getLong("start_date");
             }
             byte[] imageBytes = Base64.decode(msgJsonObj.getString("sender_profile_image"), 0);
             mSenderImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
@@ -98,7 +98,7 @@ public class MessageViewActivity extends AppCompatActivity {
         mSenderNameView.setText(mFromText);
         mAttachmentView.setVisibility(View.GONE);
         mToView.setText("to " + mToText);
-        mDateView.setText(HomeMainActivity.getDateString(mDate));
+        mDateView.setText(HomeMainActivity.getDateString(String.valueOf(mDate)));
 
         ContentValues msgUpdate = new ContentValues();
         String selection = "message_id like '" + msgId + "'";

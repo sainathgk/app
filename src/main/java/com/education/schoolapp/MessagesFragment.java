@@ -91,6 +91,7 @@ public class MessagesFragment extends Fragment{
     @Override
     public void onResume() {
         super.onResume();
+        mListAdapter.updateData();
         mListAdapter.notifyDataSetChanged();
         mRecyclerListView.invalidate();
     }

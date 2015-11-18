@@ -23,6 +23,7 @@ import java.util.ArrayList;
  */
 public class MessagesListAdapter extends RecyclerView.Adapter<MessagesListAdapter.ViewHolder> {
 
+    private final boolean mIsTeacher;
     private String mMsgBox = "Inbox";
     private int mMsgType = 1;
     private SchoolDataUtility mSchoolDB;
@@ -48,6 +49,7 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessagesListAdapte
     public MessagesListAdapter(Context ctx, String dataset, String loginName, boolean isTeacher) {
         this.mDataset = dataset;
         mContext = ctx;
+        mIsTeacher = isTeacher;
         mSchoolDB = new SchoolDataUtility(loginName, isTeacher);
 
         switch (dataset) {
@@ -73,6 +75,35 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessagesListAdapte
 
             case "Notifications":
                 msgData = mSchoolDB.getAllNotifications(ctx);
+                mMsgType = 2;
+                break;
+        }
+    }
+
+    public void updateData() {
+        switch (mDataset) {
+            case "Messages":
+                msgData = mSchoolDB.getAllMessages(mContext);
+                break;
+
+            case "Inbox":
+                if (mIsTeacher) {
+                    msgData = mSchoolDB.getSentNotifications(mContext);
+                    mMsgType = 2;
+                    mMsgBox = "Outbox";
+                } else {
+                    msgData = mSchoolDB.getSavedMessages(mContext);
+                    mMsgBox = "Saved";
+                }
+                break;
+
+            case "Outbox":
+                msgData = mSchoolDB.getOutboxMessages(mContext);
+                mMsgBox = "Outbox";
+                break;
+
+            case "Notifications":
+                msgData = mSchoolDB.getAllNotifications(mContext);
                 mMsgType = 2;
                 break;
         }
