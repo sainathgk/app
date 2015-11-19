@@ -39,5 +39,14 @@
         <item name="android:background">@color/black_overlay</item>
     </style>
 
+    <style name="btn">
+        <item name="android:textColor">#ffffff</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="title_bar">
+        <item name="android:textColor">#d9f3ff</item>
+        <item name="android:textSize">22sp</item>
+    </style>
 
 </resources>

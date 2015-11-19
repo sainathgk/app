@@ -1,6 +1,7 @@
 package com.education.schoolapp;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -8,11 +9,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
-import com.education.schoolapp.dummy.DummyContent;
+import com.education.database.schoolapp.SchoolDataUtility;
+import com.nostra13.universalimageloader.cache.memory.impl.WeakMemoryCache;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 
 /**
  * A fragment representing a list of Items.
@@ -47,6 +52,9 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
      */
     private ListAdapter mAdapter;
 
+    GalleryAdapter adapter;
+    ImageLoader imageLoader;
+
     // TODO: Rename and change types of parameters
     public static AlbumFragment newInstance(String param1, String param2) {
         AlbumFragment fragment = new AlbumFragment();
@@ -74,8 +82,29 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
         }
 
         // TODO: Change Adapter to display your content
-        mAdapter = new ArrayAdapter<DummyContent.DummyItem>(getActivity(),
-                android.R.layout.simple_list_item_1, android.R.id.text1, DummyContent.ITEMS);
+        /*mAdapter = new ArrayAdapter<DummyContent.DummyItem>(getActivity(),
+                android.R.layout.simple_list_item_1, android.R.id.text1, DummyContent.ITEMS);*/
+
+        initImageLoader();
+
+        adapter = new GalleryAdapter(this.getContext(), imageLoader);
+        adapter.setMultiplePick(false);
+    }
+
+
+    private void initImageLoader() {
+        DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
+                .cacheOnDisc().imageScaleType(ImageScaleType.EXACTLY_STRETCHED)
+                .bitmapConfig(Bitmap.Config.RGB_565).build();
+        ImageLoaderConfiguration.Builder builder = new ImageLoaderConfiguration.Builder(
+                this.getContext());
+        builder.defaultDisplayImageOptions(defaultOptions);
+        builder.memoryCache(
+                new WeakMemoryCache());
+
+        ImageLoaderConfiguration config = builder.build();
+        imageLoader = ImageLoader.getInstance();
+        imageLoader.init(config);
     }
 
     @Override
@@ -85,12 +114,19 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
 
         // Set the adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);
-        ((AdapterView<ListAdapter>) mListView).setAdapter(mAdapter);
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        adapter.addAll(new SchoolDataUtility().getUpdatedImages(this.getContext(), "Sent"));
+        ((AdapterView<ListAdapter>) mListView).setAdapter(adapter);
+
     }
 
     @Override

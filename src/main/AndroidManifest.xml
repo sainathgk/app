@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.education.schoolapp" >
+    package="com.education.schoolapp">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- This app has permission to register and receive data message. -->
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
@@ -21,7 +23,7 @@
         android:icon="@drawable/school_logo"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
         <activity
             android:name=".HomeMainActivity"
             android:icon="@drawable/school_logo"
@@ -31,7 +33,7 @@
             android:name=".ProfileScrollingActivity"
             android:label=" "
             android:parentActivityName=".HomeMainActivity"
-            android:theme="@style/AppTheme.NoActionBar" >
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.education.schoolapp.HomeMainActivity" />
@@ -43,7 +45,7 @@
             android:name=".SavedMessagesActivity"
             android:label="@string/title_activity_saved_messages"
             android:parentActivityName=".HomeMainActivity"
-            android:theme="@style/AppTheme.NoActionBar" >
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.education.schoolapp.HomeMainActivity" />
@@ -58,7 +60,7 @@
             android:name=".LoginActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_login"
-            android:theme="@style/FullscreenTheme"/>
+            android:theme="@style/FullscreenTheme" />
         <activity
             android:name=".WelcomeActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -75,13 +77,21 @@
             android:name=".ComposeActivity"
             android:label="Compose" />
 
-        <activity android:name=".MessageViewActivity">
+        <activity android:name=".MessageViewActivity"></activity>
+
+        <activity android:name="CustomGalleryActivity">
+            <intent-filter>
+                <action android:name="luminous.ACTION_PICK" />
+                <action android:name="luminous.ACTION_MULTIPLE_PICK" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <receiver android:name="com.education.service.schoolapp.NotificationReceiver" />
         <receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"
-            android:permission="com.google.android.c2dm.permission.SEND" >
+            android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
                 <!-- for Gingerbread GSF backward compat -->
@@ -93,14 +103,14 @@
 
         <service
             android:name="com.education.service.schoolapp.GcmService"
-            android:exported="false" >
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
             </intent-filter>
         </service>
         <service
             android:name="com.education.service.schoolapp.MyInstanceIDListenerService"
-            android:exported="false" >
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.android.gms.iid.InstanceID" />
             </intent-filter>

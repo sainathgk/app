@@ -9,4 +9,7 @@
     <dimen name="app_bar_height">280dp</dimen>
     <dimen name="text_margin">16dp</dimen>
     <dimen name="appbar_padding_top">8dp</dimen>
+
+    <dimen name="photo_width">100dp</dimen>
+    <dimen name="photo_height">100dp</dimen>
 </resources>

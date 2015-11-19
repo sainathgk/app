@@ -4,7 +4,7 @@ package com.education.database.schoolapp;
  * Created by Sainath on 23-10-2015.
  */
 public class SchoolDataConstants {
-    public final String CONTENT_URI = "content://com.education.schoolapp/";
+    public final static String CONTENT_URI = "content://com.education.schoolapp/";
 
     /* TABLES in school app */
     public final static String IDENTITY_TABLE = "identity";
@@ -20,6 +20,7 @@ public class SchoolDataConstants {
     public final static String CLASS_STUDENTS = "class_students";
     public final static String SENT_MESSAGES_ALL = "sent_messages_all";
     public final static String RECEIVED_MESSAGES_ALL = "received_messages_all";
+    public final static String ALBUM_IMAGES = "album_images";
 
     private final static String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS ";
 
@@ -59,6 +60,10 @@ public class SchoolDataConstants {
     public final static String CREATE_RECEIVED_MESSAGES_ALL = CREATE_TABLE + RECEIVED_MESSAGES_ALL + " (subject TEXT NOT NULL, body TEXT NOT NULL, " +
             "sender_id TEXT NOT NULL, sender_name TEXT, sender_profile_image BLOB, member_ids TEXT NOT NULL, member_names TEXT, message_type INTEGER, start_date TEXT, end_date TEXT, " +
             "message_id TEXT UNIQUE NOT NULL, saved INTEGER DEFAULT 0, read_status INTEGER DEFAULT 1); " ;
+
+    public final static String CREATE_ALBUM_IMAGES = CREATE_TABLE + ALBUM_IMAGES + " (image_local_path TEXT NOT NULL, " +
+            "image_date TEXT NOT NULL, album_name TEXT, album_id TEXT, image_id TEXT, member_ids TEXT, status INTEGER DEFAULT 0, " +
+            "type TEXT ); ";
 
     public final static String CREATE_ALBUM_DETAILS = CREATE_TABLE + ALBUM_DETAILS + " (album_name TEXT NOT NULL, album_date TEXT NOT NULL, " +
             "image_count INTEGER NOT NULL); ";

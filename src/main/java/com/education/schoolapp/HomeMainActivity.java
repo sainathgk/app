@@ -2,11 +2,11 @@ package com.education.schoolapp;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -29,15 +29,27 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
+import android.util.Base64;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.MultiAutoCompleteTextView;
 import android.widget.TextView;
 
 import com.education.connection.schoolapp.NetworkConnectionUtility;
+import com.education.connection.schoolapp.NetworkConstants;
+import com.education.database.schoolapp.SchoolDataConstants;
 import com.education.database.schoolapp.SchoolDataUtility;
 import com.education.service.schoolapp.SchoolDataContentObserver;
+import com.nostra13.universalimageloader.core.ImageLoader;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -46,6 +58,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HomeMainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -79,10 +93,22 @@ public class HomeMainActivity extends AppCompatActivity
     private TextView mNavClassName;
     private ImageView mNavProfileImage;
 
-    int REQUEST_CAMERA = 0, SELECT_FILE = 1;
+    int REQUEST_CAMERA = 0, SELECT_FILE = 100;
     private NetworkConnectionUtility networkConn;
     private ProgressDialog progress;
     private String[] toStringArray;
+
+    ImageLoader imageLoader;
+    private MenuItem mUploadMenuItem;
+    private EditText mAlbumEdit;
+    private String mAlbumName = "";
+    private MultiAutoCompleteTextView mToView;
+    private HashMap<String, String> mStudentsMap;
+    private String[] mStudentIdArray;
+    private ArrayAdapter<String> adapter;
+    private String mToNames;
+    private int mImageFinalCount;
+    private int mCurrentImg = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -141,20 +167,7 @@ public class HomeMainActivity extends AppCompatActivity
                 //Hide the Student profile item from Navigation drawer.
                 navigationView.getMenu().findItem(R.id.nav_student_profile).setVisible(false);
                 navigationView.getMenu().findItem(R.id.nav_saved_messages).setTitle("Outbox Messages");
-                /*mNavLoginName.setText(getResources().getString(R.string.teacher_name));
-                mNavClassName.setText("Class Teacher : UKG");
-                mNavProfileImage.setImageBitmap(GetBitmapClippedCircle(BitmapFactory.decodeResource(getResources(), R.drawable.teacher_)));*/
-            } /*else {
-                String[] studentDetails = new SchoolDataUtility(mLoginName, false).getStudentName(this);
-
-                mNavLoginName.setText(studentDetails[0]);
-                mNavClassName.setText("Class : " + studentDetails[1]);
-                if (mLoginName.equalsIgnoreCase("abc")) {
-                    mNavProfileImage.setImageBitmap(GetBitmapClippedCircle(BitmapFactory.decodeResource(getResources(), R.drawable.student)));
-                } else {
-                    mNavProfileImage.setImageBitmap(GetBitmapClippedCircle(BitmapFactory.decodeResource(getResources(), R.drawable.student)));
-                }
-            }*/
+            }
             SchoolDataUtility schoolData = new SchoolDataUtility(mLoginName, false);
 
             String[] studentDetails = schoolData.getStudentName(this);
@@ -193,8 +206,12 @@ public class HomeMainActivity extends AppCompatActivity
                 }
                 if (position == 2) {
                     fab.setImageResource(android.R.drawable.ic_menu_camera);
+                    if (mIsTeacher) {
+                        mUploadMenuItem.setVisible(true);
+                    }
                 } else {
                     fab.setImageResource(android.R.drawable.ic_dialog_email);
+                    mUploadMenuItem.setVisible(false);
                 }
             }
 
@@ -206,37 +223,42 @@ public class HomeMainActivity extends AppCompatActivity
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
-/*
+
+        mAlbumEdit = new EditText(this);
+        mAlbumEdit.setInputType(InputType.TYPE_CLASS_TEXT);
+
+        mToView = new MultiAutoCompleteTextView(this);
+        mToView.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
+
+        mStudentsMap = new SchoolDataUtility().getClassStudents(this);
+        if (mStudentsMap != null) {
+            mStudentIdArray = new String[mStudentsMap.size()];
+            int idx = 0;
+
+            for (Map.Entry<String, String> mapEntry : mStudentsMap.entrySet()) {
+                mStudentIdArray[idx] = mapEntry.getKey();
+                idx++;
+            }
+
+            adapter =
+                    new ArrayAdapter<String>(HomeMainActivity.this,
+                            android.R.layout.simple_spinner_dropdown_item, mStudentIdArray);
+
+            adapter.setDropDownViewResource(android.R.layout.simple_expandable_list_item_1);
+        }
+
+        mToView.setThreshold(1);
+        mToView.setAdapter(adapter);
 
         progress = new ProgressDialog(this);
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
-        progress.setTitle("Fetching Data ...");
-        progress.show();
+        progress.setTitle("Uploading ...");
 
         networkConn = new NetworkConnectionUtility();
 
         NetworkResp networkResp = new NetworkResp();
         networkConn.setNetworkListener(networkResp);
-*/
-
-        /*String className = getIntent().getStringExtra("class");
-        if (className == null) {
-            progress.dismiss();
-            return;
-        }
-        toStringArray = (String[]) Arrays.asList(className.split(",")).toArray();
-
-        for (int clas = 0; clas < toStringArray.length; clas++)
-            networkConn.getStudents(toStringArray[clas]);*/
-
-        /*String[] receivedMsgs = new SchoolDataUtility().getPendingMessages(this);
-        if (receivedMsgs != null && receivedMsgs.length > 0) {
-            for (int msg = 0; msg < receivedMsgs.length; msg++) {
-                progress.show();
-                networkConn.getMessage(receivedMsgs[msg]);
-            }
-        }*/
     }
 
     @Override
@@ -244,87 +266,6 @@ public class HomeMainActivity extends AppCompatActivity
         super.onResume();
     }
 
-    /*private class NetworkResp implements NetworkConnectionUtility.NetworkResponseListener {
-        @Override
-        public void onResponse(String urlString, String networkResult) {
-            if (urlString.startsWith(NetworkConstants.GET_CLASS_STUDENTS)) {
-                if (networkResult == null) {
-                    Log.i("Network", "Get Class Students API");
-                    return;
-                }
-                try {
-                    JSONArray studentsArray = new JSONArray(networkResult);
-                    int stuArrayLength = studentsArray.length();
-                    if (stuArrayLength > 0) {
-                        ContentValues[] studentValues = new ContentValues[stuArrayLength];
-
-                        for (int student = 0; student < stuArrayLength; student++) {
-                            studentValues[student] = new ContentValues();
-                            studentValues[student].put("student_id", studentsArray.getJSONObject(student).getString("id"));
-                            studentValues[student].put("student_name", studentsArray.getJSONObject(student).getString("student_name"));
-                            int classLength = NetworkConstants.GET_CLASS_STUDENTS.length();
-                            int endUrlLength = urlString.lastIndexOf(".json");
-                            studentValues[student].put("class", urlString.substring(classLength, endUrlLength));
-                        }
-
-                        getContentResolver().bulkInsert(Uri.parse("content://com.education.schoolapp/class_students"), studentValues);
-                        progress.dismiss();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            } *//*else if (urlString.startsWith(NetworkConstants.GET_MESSAGE)) {
-                if (networkResult == null) {
-                    Log.i("Network", "Get Message API");
-                    return;
-                }
-                try {
-                    JSONObject messageObj = new JSONObject(networkResult);
-                    String[] messageProjection = {"subject", "body", "sender_id", *//**//*"start_date", "end_date", *//**//*"message_type"};
-                    JSONUtility jsonUtility = new JSONUtility();
-                    jsonUtility.setColumsList(messageProjection);
-
-                    ContentValues msgValues = jsonUtility.fromJSON(messageObj);
-                    msgValues.put("message_id", messageObj.getJSONObject("_id").getString("$oid"));
-
-                    JSONArray membersArray = messageObj.getJSONArray("member_ids");
-                    String[] memberIds = new String[membersArray.length()];
-                    String[] memberNames = new String[membersArray.length()];
-                    HashMap<String, String> mStudentsMap = new SchoolDataUtility().getClassStudents(getApplicationContext());
-                    if (mStudentsMap != null) {
-                        for (int i = 0; i < memberIds.length; i++) {
-                            memberIds[i] = membersArray.getJSONObject(i).getString("$oid");
-                            for (Map.Entry<String, String> entry : mStudentsMap.entrySet()) {
-                                if (entry.getValue().equals(memberIds[i])) {
-                                    System.out.println(entry.getKey());
-                                    memberNames[i] = entry.getKey();
-                                }
-                            }
-                        }
-                    }
-
-                    String memberIdString = Joiner.on(",").skipNulls().join(memberIds);
-                    msgValues.put("member_ids", memberIdString);
-                    msgValues.put("member_names", Joiner.on(",").skipNulls().join(memberNames));
-                    msgValues.put("sender_profile_image", Base64.decode(messageObj.getString("sender_profile_image"), 0));
-                    //TODO : To be fixed, get the sender name from the Message Response only
-                    msgValues.put("sender_name", new SchoolDataUtility().getTeacherNameforStudent(getApplicationContext(), mLoginName));
-
-                    getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
-
-                    ContentValues msgIdUpdate = new ContentValues();
-                    String selection = " message_id like '" + messageObj.getJSONObject("_id").getString("$oid") + "'";
-                    msgIdUpdate.put("status", 1);
-
-                    getContentResolver().update(Uri.parse("content://com.education.schoolapp/server_message_ids"), msgIdUpdate, selection, null);
-                    progress.dismiss();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }*//*
-        }
-    }
-*/
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -372,11 +313,26 @@ public class HomeMainActivity extends AppCompatActivity
         return dateFormatter.format(calendar.getTime());
     }
 
+    public static String getDateString(Long timeMilliSeconds) {
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
+
+        Calendar calendar = Calendar.getInstance();
+        try {
+            calendar.setTimeInMillis(timeMilliSeconds);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            return "";
+        }
+
+        return dateFormatter.format(calendar.getTime());
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        //getMenuInflater().inflate(R.menu.home_main, menu);
+
+        getMenuInflater().inflate(R.menu.home_main, menu);
+        mUploadMenuItem = menu.findItem(R.id.action_upload);
 
         return true;
     }
@@ -389,7 +345,8 @@ public class HomeMainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_upload) {
+            buildAlbumNameDialog();
             return true;
         }
 
@@ -425,6 +382,143 @@ public class HomeMainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void buildAlbumNameDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setTitle("Enter Album Name");
+        builder.setView(mAlbumEdit);
+        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mAlbumName = mAlbumEdit.getText().toString();
+                if (mAlbumName != null && !mAlbumName.isEmpty()) {
+                    dialog.dismiss();
+                    buildMembersDialog();
+                }
+            }
+        });
+
+        builder.show();
+    }
+
+    private void buildMembersDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setTitle("Select Members to Upload");
+        builder.setView(mToView);
+        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mToNames = mToView.getText().toString();
+                if (mToNames != null && !mToNames.isEmpty()) {
+                    dialog.dismiss();
+                    createAlbumInServer(mAlbumName);
+                }
+            }
+        });
+
+        builder.show();
+    }
+
+    private void createAlbumInServer(String albumName) {
+        JSONObject albumJsonObj = new JSONObject();
+        JSONObject albumObj = new JSONObject();
+
+        progress.show();
+        try {
+            albumJsonObj.put("name", albumName);
+            albumJsonObj.put("date", HomeMainActivity.getDateString(System.currentTimeMillis()));
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.school_logo);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, outputStream);
+
+            albumJsonObj.put("image_data_arr", new JSONArray().put(Base64.encodeToString(outputStream.toByteArray(), 0)));
+
+            //TODO - Multimedia should be shared to selected members
+            /*String[] toStringArray = (String[]) Arrays.asList(mToNames.split(",")).toArray();
+            JSONArray toSenderIds = new JSONArray();
+            for (int i = 0; i < toStringArray.length - 1; i++) {
+                toSenderIds.put(mStudentsMap.get(toStringArray[i]));
+            }*/
+            albumJsonObj.put("member_id", mLoginName);
+
+            albumObj.put("album", albumJsonObj);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        networkConn.createAlbum(albumObj.toString());
+    }
+
+    private void uploadImagesToServer() {
+        JSONArray imagesArray = new SchoolDataUtility().getPendingImages(this);
+        int imagesCount = imagesArray.length();
+        mImageFinalCount = imagesCount;
+        for (int imgIdx = 0; imgIdx < imagesCount; imgIdx++) {
+            try {
+                networkConn.createMultimedia(imagesArray.getJSONObject(imgIdx).toString());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class NetworkResp implements NetworkConnectionUtility.NetworkResponseListener {
+        @Override
+        public void onResponse(String urlString, String networkResult) {
+            if (urlString.equalsIgnoreCase(NetworkConstants.CREATE_ALBUM)) {
+                if (networkResult == null) {
+                    return;
+                }
+                try {
+                    JSONObject albumResp = new JSONObject(networkResult);
+                    ContentValues albumValues = new ContentValues();
+                    String selection = " status == 0";
+
+                    albumValues.put("album_name", albumResp.getString("name"));
+                    albumValues.put("album_id", albumResp.getJSONObject("_id").getString("$oid"));
+
+                    getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                            albumValues, selection, null);
+                    uploadImagesToServer();
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } else if (urlString.equalsIgnoreCase(NetworkConstants.CREATE_MULTIMEDIA)) {
+                if (networkResult == null) {
+                    return;
+                }
+                progress.setTitle("Uploading ... " + mCurrentImg + "/" + mImageFinalCount);
+                mCurrentImg++;
+
+                if (mCurrentImg == mImageFinalCount) {
+                    ContentValues multimediaValues = new ContentValues();
+                    multimediaValues.put("status", 1);
+                    getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                            multimediaValues, null, null);
+
+                    progress.dismiss();
+                }
+
+                /*try {
+                    JSONObject multimediaResp = new JSONObject(networkResult);
+                    ContentValues multimediaValues = new ContentValues();
+
+                    String selection = "";
+                    multimediaValues.put("image_id", multimediaResp.getString("oid"));
+                    multimediaValues.put("status", 1);
+
+                    getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                            multimediaValues, selection, null);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }*/
+            }
+        }
     }
 
     /**
@@ -485,11 +579,8 @@ public class HomeMainActivity extends AppCompatActivity
                     startActivityForResult(intent, REQUEST_CAMERA);
                 } else if (items[item].equals("Choose from Library")) {
                     Intent intent = new Intent(
-                            Intent.ACTION_PICK,
-                            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                    intent.setType("image/*");
-                    startActivityForResult(
-                            Intent.createChooser(intent, "Select File"),
+                            Action.ACTION_MULTIPLE_PICK);
+                    startActivityForResult(intent,
                             SELECT_FILE);
                 } else if (items[item].equals("Cancel")) {
                     dialog.dismiss();
@@ -512,6 +603,7 @@ public class HomeMainActivity extends AppCompatActivity
     }
 
     private void onCaptureImageResult(Intent data) {
+        String single_path = data.getStringExtra("single_path");
         Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         thumbnail.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
@@ -533,10 +625,17 @@ public class HomeMainActivity extends AppCompatActivity
 
         //TODO. set the image to Album Grid view
         //ivImage.setImageBitmap(thumbnail);
+        ContentValues imgValues = new ContentValues();
+        imgValues.put("image_local_path", single_path);
+        imgValues.put("image_date", HomeMainActivity.getDateString(System.currentTimeMillis()));
+        imgValues.put("type", "sent");
+
+        getContentResolver().insert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES), imgValues);
     }
 
-    @SuppressWarnings("deprecation")
     private void onSelectFromGalleryResult(Intent data) {
+
+    }/*{
         Uri selectedImageUri = data.getData();
         String[] projection = {MediaStore.MediaColumns.DATA};
         Cursor cursor = managedQuery(selectedImageUri, projection, null, null,
@@ -561,5 +660,5 @@ public class HomeMainActivity extends AppCompatActivity
 
         //TODO. set the image to Album Grid view
         //ivImage.setImageBitmap(bm);
-    }
+    }*/
 }

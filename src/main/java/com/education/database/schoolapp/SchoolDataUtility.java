@@ -2,14 +2,19 @@ package com.education.database.schoolapp;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.util.Base64;
 
 import com.education.connection.schoolapp.JSONUtility;
+import com.education.schoolapp.CustomGallery;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -481,5 +486,76 @@ public class SchoolDataUtility {
         }
 
         return teacherName;
+    }
+
+    public ArrayList<CustomGallery> getUpdatedImages(Context context, String displayType) {
+        ArrayList<CustomGallery> galleryList = new ArrayList<CustomGallery>();
+        Cursor imgCursor = null;
+        String[] projection = {"image_local_path", "status"};
+        String selection = " type like '" + displayType + "'";
+
+        imgCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                projection, selection, null, null);
+
+        if (imgCursor != null && imgCursor.getCount() > 0) {
+            while (imgCursor.moveToNext()) {
+                CustomGallery item = new CustomGallery();
+                item.sdcardPath = imgCursor.getString(imgCursor.getColumnIndex("image_local_path"));
+                item.syncState = imgCursor.getInt(imgCursor.getColumnIndex("status"));
+                galleryList.add(item);
+            }
+            imgCursor.close();
+        }
+        return galleryList;
+    }
+
+    public JSONArray getPendingImages(Context context) {
+        JSONArray pendImagesArray = new JSONArray();
+        Cursor pendImageCursor = null;
+        String[] projection = {"image_local_path", "album_id", "image_date"};
+        String selection = " type like 'Sent' and status == 0";
+
+        pendImageCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                projection, selection, null, null);
+
+        if (pendImageCursor != null && pendImageCursor.getCount() > 0) {
+            while (pendImageCursor.moveToNext()) {
+                JSONObject pendImagesObj = new JSONObject();
+                try {
+                    pendImagesObj.put("date", pendImageCursor.getLong(pendImageCursor.getColumnIndex("image_date")));
+                    pendImagesObj.put("type", "Image");
+                    pendImagesObj.put("album_id", pendImageCursor.getString(pendImageCursor.getColumnIndex("album_id")));
+                    pendImagesObj.put("content", getSelectedImageString(pendImageCursor.getString(
+                            pendImageCursor.getColumnIndex("image_local_path"))));
+
+                    pendImagesArray.put(new JSONObject().put("multimedium", pendImagesObj));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+            pendImageCursor.close();
+        }
+
+        return pendImagesArray;
+    }
+
+    private String getSelectedImageString(String selectedImagePath) {
+        Bitmap bm;
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(selectedImagePath, options);
+        final int REQUIRED_SIZE = 200;
+        int scale = 1;
+        while (options.outWidth / scale / 2 >= REQUIRED_SIZE
+                && options.outHeight / scale / 2 >= REQUIRED_SIZE)
+            scale *= 2;
+        options.inSampleSize = scale;
+        options.inJustDecodeBounds = false;
+        bm = BitmapFactory.decodeFile(selectedImagePath, options);
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        bm.compress(Bitmap.CompressFormat.PNG, 90, outputStream);
+
+        return Base64.encodeToString(outputStream.toByteArray(), 0);
     }
 }

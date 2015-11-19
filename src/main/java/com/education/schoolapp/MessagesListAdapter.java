@@ -146,7 +146,7 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessagesListAdapte
         holder.mMsgTitle.setText(msgData.get(position).msgTitle);
         holder.mMsgItemView.setTag(msgData.get(position).msgId);
         holder.mMsgDescription.setText(msgData.get(position).msgDescription);
-        holder.mMsgTimeStamp.setText(HomeMainActivity.getDateString(msgData.get(position).msgDate));
+        holder.mMsgTimeStamp.setText(msgData.get(position).msgDate);
         if (msgData.get(position).msgReadStatus == 1) {
             holder.mMsgTitle.setTypeface(null, Typeface.BOLD);
             holder.mMsgDescription.setTypeface(null, Typeface.BOLD);

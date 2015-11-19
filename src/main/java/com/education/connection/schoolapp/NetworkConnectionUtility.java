@@ -61,6 +61,20 @@ public class NetworkConnectionUtility {
         }
     }
 
+    public void createAlbum(String albumDetails) {
+        if (NetworkConstants.isServerON) {
+            Log.i(TAG, "Create Album");
+            new AsyncNetwork().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "SEARCH", NetworkConstants.CREATE_ALBUM, albumDetails);
+        }
+    }
+
+    public void createMultimedia(String multimediaDetais) {
+        if (NetworkConstants.isServerON) {
+            Log.i(TAG, "Create Multimedia");
+            new AsyncNetwork().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "SEARCH", NetworkConstants.CREATE_MULTIMEDIA, multimediaDetais);
+        }
+    }
+
     public interface NetworkResponseListener {
         void onResponse(String urlString, String networkResult);
     }

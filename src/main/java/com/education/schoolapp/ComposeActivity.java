@@ -277,10 +277,10 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
             compJsonObj.put("sender_id", mLoginName);
             compJsonObj.put("sender_profile_image", Base64.encodeToString(new SchoolDataUtility(mLoginName, true).getMemberProfilePic(this), 0));
             if (mType == 2) {
-                compJsonObj.put("start_date", c.getTimeInMillis());
-                compJsonObj.put("end_date", c.getTimeInMillis() + 10000);
+                compJsonObj.put("start_date", HomeMainActivity.getDateString(c.getTimeInMillis()));
+                compJsonObj.put("end_date", HomeMainActivity.getDateString(c.getTimeInMillis() + 10000));
             } else if (mType == 1) {
-                compJsonObj.put("start_date", System.currentTimeMillis());
+                compJsonObj.put("start_date", HomeMainActivity.getDateString(System.currentTimeMillis()));
             }
             compJsonObj.put("member_ids", toSenderIds);
             msgJsonObj.put("message", compJsonObj);

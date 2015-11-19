@@ -31,6 +31,12 @@ public class NetworkConstants {
     //POST - http://<server_ip>/postMessage
     public final static String POST_MESSAGE = HOST_URL + "/createMessage.json";
 
+    //POST - http://<server_ip>/createAlbum.json
+    public final static String CREATE_ALBUM = HOST_URL + "/createAlbum.json";
+
+    //POST - http://<server_ip>/createMultimedia.json
+    public final static String CREATE_MULTIMEDIA = HOST_URL + "/createMultimedia.json";
+
     //GET - http://<server_ip>/getAllNotifications?Class=LKG&id=758x584d6
     public final static String GET_ALL_NOTIFICATIONS = HOST_URL + "getAllNotifications?Class=";
 

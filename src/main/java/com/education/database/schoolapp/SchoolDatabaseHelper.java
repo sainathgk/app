@@ -17,6 +17,7 @@ public class SchoolDatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(SchoolDataConstants.CREATE_IDENTITY_TABLE);
         db.execSQL(SchoolDataConstants.CREATE_USER_PROFILE);
+/*
         db.execSQL(SchoolDataConstants.CREATE_ATTENDANCE_TABLE);
         db.execSQL(SchoolDataConstants.CREATE_RECEIVED_MESSAGES);
         db.execSQL(SchoolDataConstants.CREATE_SENT_MESSAGES);
@@ -24,10 +25,12 @@ public class SchoolDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(SchoolDataConstants.CREATE_SENT_NOTIFICATIONS);
         db.execSQL(SchoolDataConstants.CREATE_ALBUM_DETAILS);
         db.execSQL(SchoolDataConstants.CREATE_ALBUM_DATA);
+*/
         db.execSQL(SchoolDataConstants.CREATE_SERVER_MESSAGE_IDS);
         db.execSQL(SchoolDataConstants.CREATE_CLASS_STUDENTS);
         db.execSQL(SchoolDataConstants.CREATE_SENT_MESSAGES_ALL);
         db.execSQL(SchoolDataConstants.CREATE_RECEIVED_MESSAGES_ALL);
+        db.execSQL(SchoolDataConstants.CREATE_ALBUM_IMAGES);
     }
 
     @Override
