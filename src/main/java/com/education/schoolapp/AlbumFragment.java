@@ -34,10 +34,12 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+    private static final String ARG_PARAM3 = "param3";
 
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private boolean mParam3;
 
     //private OnFragmentInteractionListener mListener;
 
@@ -56,11 +58,12 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
     ImageLoader imageLoader;
 
     // TODO: Rename and change types of parameters
-    public static AlbumFragment newInstance(String param1, String param2) {
+    public static AlbumFragment newInstance(String param1, String param2, boolean param3) {
         AlbumFragment fragment = new AlbumFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
+        args.putBoolean(ARG_PARAM3, param3);
         fragment.setArguments(args);
         return fragment;
     }
@@ -79,6 +82,7 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
+            mParam3 = getArguments().getBoolean(ARG_PARAM3);
         }
 
         // TODO: Change Adapter to display your content
@@ -117,6 +121,7 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
+        ((AdapterView<ListAdapter>) mListView).setAdapter(adapter);
 
         return view;
     }
@@ -124,8 +129,13 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
     @Override
     public void onResume() {
         super.onResume();
-        adapter.addAll(new SchoolDataUtility().getUpdatedImages(this.getContext(), "Sent"));
-        ((AdapterView<ListAdapter>) mListView).setAdapter(adapter);
+        if (mParam3) {
+            adapter.addAll(new SchoolDataUtility().getUpdatedImages(this.getContext(), "Sent"));
+        } else {
+            adapter.addAll(new SchoolDataUtility().getUpdatedImages(this.getContext(), "Received"));
+        }
+        adapter.notifyDataSetChanged();
+        mListView.invalidate();
 
     }
 

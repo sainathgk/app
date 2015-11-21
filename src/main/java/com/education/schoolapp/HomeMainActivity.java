@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -19,6 +20,7 @@ import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -31,6 +33,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Base64;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -108,7 +111,11 @@ public class HomeMainActivity extends AppCompatActivity
     private ArrayAdapter<String> adapter;
     private String mToNames;
     private int mImageFinalCount;
-    private int mCurrentImg = 1;
+    private int mCurrentImg = 0;
+    private MenuItem mDownloadMenuItem;
+    private int mDownloadImagesLength;
+    private File mAppDir;
+    private String mAlbumId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -208,10 +215,13 @@ public class HomeMainActivity extends AppCompatActivity
                     fab.setImageResource(android.R.drawable.ic_menu_camera);
                     if (mIsTeacher) {
                         mUploadMenuItem.setVisible(true);
+                    } else {
+                        mDownloadMenuItem.setVisible(true);
                     }
                 } else {
                     fab.setImageResource(android.R.drawable.ic_dialog_email);
                     mUploadMenuItem.setVisible(false);
+                    mDownloadMenuItem.setVisible(false);
                 }
             }
 
@@ -259,6 +269,15 @@ public class HomeMainActivity extends AppCompatActivity
 
         NetworkResp networkResp = new NetworkResp();
         networkConn.setNetworkListener(networkResp);
+
+        // Find the SD Card path
+        File filepath = Environment.getExternalStorageDirectory();
+
+        // Create a new folder in SD Card
+        mAppDir = new File(filepath.getAbsolutePath() + "/" + getResources().getString(R.string.app_name));
+        if (!mAppDir.exists()) {
+            mAppDir.mkdirs();
+        }
     }
 
     @Override
@@ -327,12 +346,41 @@ public class HomeMainActivity extends AppCompatActivity
         return dateFormatter.format(calendar.getTime());
     }
 
+    // Storage Permissions
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+
+    /**
+     * Checks if the app has permission to write to device storage
+     * <p/>
+     * If the app does not has permission then the user will be prompted to grant permissions
+     *
+     * @param activity
+     */
+    public static void verifyStoragePermissions(Activity activity) {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
 
         getMenuInflater().inflate(R.menu.home_main, menu);
         mUploadMenuItem = menu.findItem(R.id.action_upload);
+        mDownloadMenuItem = menu.findItem(R.id.action_download);
 
         return true;
     }
@@ -347,6 +395,9 @@ public class HomeMainActivity extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_upload) {
             buildAlbumNameDialog();
+            return true;
+        } else if (id == R.id.action_download) {
+            downloadImagesFromServer();
             return true;
         }
 
@@ -395,7 +446,8 @@ public class HomeMainActivity extends AppCompatActivity
                 mAlbumName = mAlbumEdit.getText().toString();
                 if (mAlbumName != null && !mAlbumName.isEmpty()) {
                     dialog.dismiss();
-                    buildMembersDialog();
+                    createAlbumInServer(mAlbumName);
+                    //buildMembersDialog();
                 }
             }
         });
@@ -465,6 +517,23 @@ public class HomeMainActivity extends AppCompatActivity
         }
     }
 
+    private void downloadImagesFromServer() {
+        JSONArray imagesIdArray = new SchoolDataUtility().getPendingImagesToDownload(this);
+        int imagesLength = imagesIdArray.length();
+        mDownloadImagesLength = imagesLength;
+        mCurrentImg = 0;
+
+        for (int i = 0; i < imagesLength; i++) {
+            try {
+                String imageId = imagesIdArray.getString(i);
+                Log.i("Network", "Download Image ID is " + imageId);
+                networkConn.getMultimedia(imageId);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private class NetworkResp implements NetworkConnectionUtility.NetworkResponseListener {
         @Override
         public void onResponse(String urlString, String networkResult) {
@@ -478,7 +547,8 @@ public class HomeMainActivity extends AppCompatActivity
                     String selection = " status == 0";
 
                     albumValues.put("album_name", albumResp.getString("name"));
-                    albumValues.put("album_id", albumResp.getJSONObject("_id").getString("$oid"));
+                    mAlbumId = albumResp.getJSONObject("_id").getString("$oid");
+                    albumValues.put("album_id", mAlbumId);
 
                     getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
                             albumValues, selection, null);
@@ -488,11 +558,11 @@ public class HomeMainActivity extends AppCompatActivity
                     e.printStackTrace();
                 }
             } else if (urlString.equalsIgnoreCase(NetworkConstants.CREATE_MULTIMEDIA)) {
+                mCurrentImg++;
                 if (networkResult == null) {
                     return;
                 }
                 progress.setTitle("Uploading ... " + mCurrentImg + "/" + mImageFinalCount);
-                mCurrentImg++;
 
                 if (mCurrentImg == mImageFinalCount) {
                     ContentValues multimediaValues = new ContentValues();
@@ -501,6 +571,12 @@ public class HomeMainActivity extends AppCompatActivity
                             multimediaValues, null, null);
 
                     progress.dismiss();
+
+                    Intent composeIntent = new Intent(getApplicationContext(), ComposeActivity.class);
+                    composeIntent.putExtra("Type", 4);
+                    composeIntent.putExtra("albumId", mAlbumId);
+
+                    startActivity(composeIntent);
                 }
 
                 /*try {
@@ -517,8 +593,70 @@ public class HomeMainActivity extends AppCompatActivity
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }*/
+            } else if (urlString.startsWith(NetworkConstants.GET_MULTIMEDIA)) {
+                mCurrentImg++;
+                if (networkResult == null) {
+                    return;
+                }
+                progress.setTitle("Downloading ... " + mCurrentImg + "/" + mDownloadImagesLength);
+                progress.show();
+                try {
+                    JSONObject imageJsonObj = new JSONObject(networkResult);
+                    String imageString = imageJsonObj.getString("content");
+                    String imagePath = saveImageToGallery(imageString);
+                    String imageId = imageJsonObj.getJSONObject("_id").getString("$oid");
+
+                    ContentValues imgValues = new ContentValues();
+                    String selection = " image_id like '" + imageId + "'";
+
+                    imgValues.put("image_local_path", imagePath);
+                    imgValues.put("image_date", imageJsonObj.getString("date"));
+                    imgValues.put("status", 1);
+
+                    getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                            imgValues, selection, null);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                if (mCurrentImg == mDownloadImagesLength) {
+                    progress.dismiss();
+                }
             }
         }
+    }
+
+    private String saveImageToGallery(String imgString) {
+        verifyStoragePermissions(this);
+        String imageName = System.currentTimeMillis() + ".jpg";
+        File imageFile = new File(mAppDir, imageName);
+        byte[] imageBytes = Base64.decode(imgString, 0);
+
+        Bitmap imgBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+        if (imgBitmap == null) {
+            return "";
+        }
+        FileOutputStream output = null;
+        try {
+            output = new FileOutputStream(imageFile);
+            // Compress into png format image from 0% - 100%
+            imgBitmap.compress(Bitmap.CompressFormat.JPEG, 100, output);
+            output.flush();
+            output.close();
+
+            String url = MediaStore.Images.Media.insertImage(getContentResolver(), imgBitmap,
+                    imageName, imageName);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Log.i("Album", "Image Path - "+imageFile.getAbsolutePath());
+
+        return imageFile.getAbsolutePath();
+
     }
 
     /**
@@ -540,7 +678,7 @@ public class HomeMainActivity extends AppCompatActivity
             } else if (position == 1) {
                 return MessagesFragment.newInstance("Notifications", mLoginName, mIsTeacher);
             } else if (position == 2) {
-                return AlbumFragment.newInstance("Album", mLoginName);
+                return AlbumFragment.newInstance("Album", mLoginName, mIsTeacher);
             }
             return null;
         }

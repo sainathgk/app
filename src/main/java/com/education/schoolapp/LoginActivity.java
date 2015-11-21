@@ -26,6 +26,7 @@ import android.widget.Toast;
 import com.education.connection.schoolapp.JSONUtility;
 import com.education.connection.schoolapp.NetworkConnectionUtility;
 import com.education.connection.schoolapp.NetworkConstants;
+import com.education.database.schoolapp.SchoolDataConstants;
 import com.education.database.schoolapp.SchoolDataUtility;
 import com.education.service.schoolapp.QuickstartPreferences;
 import com.education.service.schoolapp.RegistrationIntentService;
@@ -38,6 +39,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,6 +73,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private String[] toStringArray;
     private String[] receivedMsgs;
     private int mClassesLength;
+    private HashMap<String, Integer> mReceivedMsgsMap;
+    private String[] receivedNots;
+    private String[] receivedAlbum;
+    private ArrayList<String> mAlbumIds = new ArrayList<String>();
+    private int mAlbumIdx = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -209,7 +216,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 editor.putString(SHARED_LOGIN_NAME, mOid);
                 editor.apply();
 
-            }else if (urlString.startsWith(NetworkConstants.GET_CLASS_STUDENTS)) {
+            } else if (urlString.startsWith(NetworkConstants.GET_CLASS_STUDENTS)) {
                 mClassesLength--;
                 if (networkResult == null) {
                     Log.i("Network", "Get Class Students API");
@@ -236,9 +243,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     }
                 }
                 if (mClassesLength == 0) {
-                    if (receivedMsgs != null && receivedMsgs.length > 0) {
-                        for (int msg = 0; msg < receivedMsgs.length; msg++) {
-                            networkConn.getMessage(receivedMsgs[msg]);
+                    //receivedMsgs = new SchoolDataUtility().getPendingMessages(getApplicationContext());
+                    if (receivedMsgs != null) {
+                        mMessageFinalCount = mMessageArrayLength = receivedMsgs.length;
+                        if (mMessageFinalCount > 0) {
+                            for (int msg = 0; msg < mMessageFinalCount; msg++) {
+                                networkConn.getMessage(receivedMsgs[msg]);
+                            }
                         }
                     }
                 }
@@ -249,7 +260,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 try {
                     progress.setTitle("Fetching Data ... " + mCurrentMsg + "/" + mMessageFinalCount);
                     JSONObject messageObj = new JSONObject(networkResult);
-                    String[] messageProjection = {"subject", "body", "sender_id", /*"start_date", "end_date", */"message_type"};
+                    String[] messageProjection = {"subject", "body", "sender_id", "start_date", "end_date", "message_type"};
                     JSONUtility jsonUtility = new JSONUtility();
                     jsonUtility.setColumsList(messageProjection);
 
@@ -275,6 +286,19 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     String memberIdString = Joiner.on(",").skipNulls().join(memberIds);
                     msgValues.put("member_ids", memberIdString);
                     msgValues.put("member_names", Joiner.on(",").skipNulls().join(memberNames));
+
+                    if (messageObj.getString("album_ids") != null && !messageObj.getString("album_ids").equalsIgnoreCase("null")) {
+                        JSONArray albumArray = messageObj.getJSONArray("album_ids");
+                        if (albumArray != null) {
+                            String[] albumIds = new String[albumArray.length()];
+                            for (int i = 0; i < albumIds.length; i++) {
+                                albumIds[i] = albumArray.getString(i);
+                                mAlbumIds.add( mAlbumIdx, albumArray.getString(i));
+                                mAlbumIdx++;
+                            }
+                            msgValues.put("album_ids", Joiner.on(",").skipNulls().join(albumIds));
+                        }
+                    }
                     msgValues.put("sender_profile_image", Base64.decode(messageObj.getString("sender_profile_image"), 0));
                     //TODO : To be fixed, get the sender name from the Message Response only
                     msgValues.put("sender_name", new SchoolDataUtility().getTeacherNameforStudent(getApplicationContext(), mOid));
@@ -289,11 +313,76 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     mMessageArrayLength--;
                     mCurrentMsg++;
 
-                    if (mMessageArrayLength == 0) {
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                if (mMessageArrayLength == 0) {
+                    if (mAlbumIds != null) {
+                        mMessageFinalCount = mMessageArrayLength = mAlbumIds.size();
+                        if (mMessageArrayLength > 0) {
+                            for (int msg = 0; msg < mMessageArrayLength; msg++) {
+                                networkConn.getAlbum(mAlbumIds.get(msg));
+                            }
+                        } else {
+                            launhHomeActivity();
+                        }
+                    } else {
                         launhHomeActivity();
+                    }
+                    //receivedAlbum = new SchoolDataUtility().getPendingAlbum(getApplicationContext());
+                    /*if (receivedAlbum != null) {
+                        mMessageFinalCount = mMessageArrayLength = receivedAlbum.length;
+                        if (mMessageArrayLength > 0) {
+                            for (int msg = 0; msg < mMessageArrayLength; msg++) {
+                                networkConn.getAlbum(receivedAlbum[msg]);
+                            }
+                        } else {
+                            launhHomeActivity();
+                        }
+                    } else {
+                        launhHomeActivity();
+                    }*/
+                }
+            } else if (urlString.startsWith(NetworkConstants.GET_ALBUM)) {
+                if (networkResult == null || networkResult.equalsIgnoreCase("Bad Request")) {
+                    Log.i("Network", "Get Album API");
+                }
+                progress.setTitle("Fetching Album ... " + mCurrentMsg + "/" + mMessageFinalCount);
+                try {
+                    JSONObject albumObj = new JSONObject(networkResult);
+                    JSONArray albumArray = albumObj.getJSONArray("multimediums");
+                    if (albumArray != null) {
+                        int imageLength = albumArray.length();
+                        if (imageLength > 0) {
+                            ContentValues[] albumValues = new ContentValues[imageLength];
+                            ContentValues albumMsgUpdate = new ContentValues();
+                            String albumName = "";
+                            for (int albIdx = 0; albIdx < imageLength; albIdx++) {
+                                albumValues[albIdx] = new ContentValues();
+
+                                albumValues[albIdx].put("type", "Received");
+                                albumName = albumObj.getString("name");
+                                albumValues[albIdx].put("album_name", albumName);
+                                albumValues[albIdx].put("album_id", albumObj.getJSONObject("_id").getString("$oid"));
+                                albumValues[albIdx].put("image_id", albumArray.getJSONObject(albIdx).getJSONObject("_id").getString("$oid"));
+                            }
+                            getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES), albumValues);
+
+                            /*albumMsgUpdate.put("read_status", 0);
+                            String selection = " album_name like '" + albumName + "'";
+
+                            getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL),
+                                    albumMsgUpdate, selection, null);*/
+                        }
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
+                }
+
+                mMessageArrayLength--;
+                mCurrentMsg++;
+                if (mMessageArrayLength == 0) {
+                    launhHomeActivity();
                 }
             }
         }

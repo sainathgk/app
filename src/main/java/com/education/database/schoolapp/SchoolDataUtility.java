@@ -281,10 +281,35 @@ public class SchoolDataUtility {
         return msgArray;
     }
 
+    public String[] getAllAlbumMessages(Context context) {
+        String[] messageProjection = {"album_ids"};
+        String[] msgArray = null;
+        Cursor msgCursor = null;
+        String selection = " member_ids like '%" + mLoginName + "%' and message_type = 4";
+
+        msgCursor = context.getContentResolver().query(Uri.parse("content://com.education.schoolapp/received_messages_all"),
+                messageProjection, selection, null, null);
+        if (msgCursor != null && msgCursor.getCount() > 0) {
+            msgArray = new String[msgCursor.getCount()];
+            int i = 0;
+
+            while (msgCursor.moveToNext()) {
+                msgArray[i] = msgCursor.getString(msgCursor.getColumnIndex("album_ids"));
+                i++;
+            }
+        }
+        if (msgCursor != null) {
+            msgCursor.close();
+        }
+
+        return msgArray;
+    }
+
+
     public String[] getPendingMessages(Context context) {
         String[] pendingMsgs = null;
         String[] projection = {"message_id"};
-        String selection = " status = 0 ";
+        String selection = " status = 0 and message_type == 1 or message_type == 2 ";
         Cursor msgCursor = null;
 
         msgCursor = context.getContentResolver().query(Uri.parse("content://com.education.schoolapp/server_message_ids"), projection, selection, null, null);
@@ -293,6 +318,26 @@ public class SchoolDataUtility {
             int idx = 0;
             while (msgCursor.moveToNext()) {
                 pendingMsgs[idx] = msgCursor.getString(msgCursor.getColumnIndex("message_id"));
+                idx++;
+            }
+            msgCursor.close();
+        }
+
+        return pendingMsgs;
+    }
+
+    public String[] getPendingAlbum(Context context) {
+        String[] pendingMsgs = null;
+        String[] projection = {"album_ids"};
+        String selection = " read_status = 1 and message_type = 3";
+        Cursor msgCursor = null;
+
+        msgCursor = context.getContentResolver().query(Uri.parse("content://com.education.schoolapp/received_messages_all"), projection, selection, null, null);
+        if (msgCursor != null && msgCursor.getCount() > 0) {
+            pendingMsgs = new String[msgCursor.getCount()];
+            int idx = 0;
+            while (msgCursor.moveToNext()) {
+                pendingMsgs[idx] = msgCursor.getString(msgCursor.getColumnIndex("album_ids"));
                 idx++;
             }
             msgCursor.close();
@@ -536,6 +581,24 @@ public class SchoolDataUtility {
             pendImageCursor.close();
         }
 
+        return pendImagesArray;
+    }
+
+    public JSONArray getPendingImagesToDownload(Context context) {
+        JSONArray pendImagesArray = new JSONArray();
+        Cursor pendImageCursor = null;
+        String[] projection = {"image_id"};
+        String selection = " type like 'Received' and status == 0";
+
+        pendImageCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI+SchoolDataConstants.ALBUM_IMAGES),
+                projection, selection, null, null);
+
+        if (pendImageCursor != null && pendImageCursor.getCount() > 0) {
+            while (pendImageCursor.moveToNext()) {
+                pendImagesArray.put(pendImageCursor.getString(pendImageCursor.getColumnIndex("image_id")));
+            }
+            pendImageCursor.close();
+        }
         return pendImagesArray;
     }
 

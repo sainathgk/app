@@ -82,6 +82,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
     private String mToText;
     private String mFromText;
     private String mComposeType;
+    private String mAlbumId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +103,8 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
         mType = getIntent().getIntExtra("Type", -1);
         if (mType == 2) {
             mDateTimeLayout.setVisibility(View.VISIBLE);
+        } else if (mType == 4) {
+            mAlbumId = getIntent().getStringExtra("albumId");
         }
 
         mRadioCompose = (RadioGroup) findViewById(R.id.radio_compose);
@@ -281,6 +284,8 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
                 compJsonObj.put("end_date", HomeMainActivity.getDateString(c.getTimeInMillis() + 10000));
             } else if (mType == 1) {
                 compJsonObj.put("start_date", HomeMainActivity.getDateString(System.currentTimeMillis()));
+            } else if (mType == 4) {
+                compJsonObj.put("album_ids", new JSONArray().put(mAlbumId));
             }
             compJsonObj.put("member_ids", toSenderIds);
             msgJsonObj.put("message", compJsonObj);

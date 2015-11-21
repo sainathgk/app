@@ -75,6 +75,20 @@ public class NetworkConnectionUtility {
         }
     }
 
+    public void getAlbum(String albumId) {
+        if (NetworkConstants.isServerON) {
+            Log.i(TAG, "Get Album");
+            new AsyncNetwork().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "GET", NetworkConstants.GET_ALBUM + albumId + ".json");
+        }
+    }
+
+    public void getMultimedia(String multimediaId) {
+        if (NetworkConstants.isServerON) {
+            Log.i(TAG, "Get Multimedia");
+            new AsyncNetwork().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "GET", NetworkConstants.GET_MULTIMEDIA + multimediaId + ".json");
+        }
+    }
+
     public interface NetworkResponseListener {
         void onResponse(String urlString, String networkResult);
     }
@@ -248,6 +262,7 @@ public class NetworkConnectionUtility {
             InputStreamReader getOutput = new InputStreamReader(urlConnect.getInputStream());
 
             getResult = CharStreams.toString(getOutput);
+
         } catch (IOException e) {
             e.printStackTrace();
         } finally {

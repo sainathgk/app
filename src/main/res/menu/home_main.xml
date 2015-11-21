@@ -1,8 +1,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools" tools:context=".HomeMainActivity">
-    <item android:id="@+id/action_upload" android:title="@string/action_settings"
+    <item android:id="@+id/action_upload" android:title="@string/action_upload"
         android:icon="@android:drawable/ic_menu_upload"
+        android:visible="false"
+        android:orderInCategory="100" app:showAsAction="always" />
+
+    <item android:id="@+id/action_download" android:title="@string/action_download"
+        android:icon="@android:drawable/ic_menu_set_as"
         android:visible="false"
         android:orderInCategory="100" app:showAsAction="always" />
 </menu>
