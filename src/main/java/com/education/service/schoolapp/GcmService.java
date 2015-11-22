@@ -17,7 +17,6 @@ import com.education.connection.schoolapp.JSONUtility;
 import com.education.connection.schoolapp.NetworkConnectionUtility;
 import com.education.connection.schoolapp.NetworkConstants;
 import com.education.database.schoolapp.SchoolDataConstants;
-import com.education.database.schoolapp.SchoolDataUtility;
 import com.education.schoolapp.HomeMainActivity;
 import com.education.schoolapp.R;
 import com.google.android.gms.gcm.GcmListenerService;
@@ -26,9 +25,6 @@ import com.google.common.base.Joiner;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by Sainath on 08-11-2015.
@@ -88,17 +84,21 @@ public class GcmService extends GcmListenerService {
                 }
                 try {
                     JSONObject messageObj = new JSONObject(networkResult);
-                    String[] messageProjection = {"subject","body", "sender_id", /*"start_date", "end_date", */"message_type"};
+                    String[] messageProjection = {"subject","body", "sender_id", "start_date", "end_date", "message_type"};
                     JSONUtility jsonUtility = new JSONUtility();
                     jsonUtility.setColumsList(messageProjection);
 
                     ContentValues msgValues = jsonUtility.fromJSON(messageObj);
                     msgValues.put("message_id", messageObj.getJSONObject("_id").getString("$oid"));
 
-                    JSONArray membersArray = messageObj.getJSONArray("member_ids");
+                    JSONArray membersArray = messageObj.getJSONArray("members");
                     String[] memberIds = new String[membersArray.length()];
                     String[] memberNames = new String[membersArray.length()];
-                    HashMap<String, String> mStudentsMap = new SchoolDataUtility().getClassStudents(getApplicationContext());
+                    for (int i = 0; i < memberIds.length; i++) {
+                        memberIds[i] = membersArray.getJSONObject(i).getJSONObject("_id").getString("$oid");
+                        memberNames[i] = membersArray.getJSONObject(i).getString("member_name");
+                    }
+                    /*HashMap<String, String> mStudentsMap = new SchoolDataUtility().getClassStudents(getApplicationContext());
                     if (mStudentsMap != null) {
                         for (int i = 0; i < memberIds.length; i++) {
                             memberIds[i] = membersArray.getJSONObject(i).getString("$oid");
@@ -109,7 +109,7 @@ public class GcmService extends GcmListenerService {
                                 }
                             }
                         }
-                    }
+                    }*/
 
                     String memberIdString = Joiner.on(",").skipNulls().join(memberIds);
                     msgValues.put("member_ids", memberIdString);
@@ -130,9 +130,7 @@ public class GcmService extends GcmListenerService {
                     }
 
                     msgValues.put("sender_profile_image", Base64.decode(messageObj.getString("sender_profile_image"), 0));
-                    //TODO : To be fixed, get the sender name from the Message Response only
-                    //msgValues.put("sender_name", new SchoolDataUtility().getTeacherNameforStudent(getApplicationContext(), LoginName));
-                    msgValues.put("sender_name", messageObj.getString("sender_id"));
+                    msgValues.put("sender_name", messageObj.getString("sender_name"));
 
                     getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
 
