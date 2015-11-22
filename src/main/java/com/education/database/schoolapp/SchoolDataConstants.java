@@ -29,7 +29,7 @@ public class SchoolDataConstants {
             "user_type TEXT NOT NULL, gcmid TEXT); ";
 
     public final static String CREATE_USER_PROFILE = CREATE_TABLE + USER_PROFILE + " (oid TEXT UNIQUE NOT NULL, member_name TEXT NOT NULL, " +
-            "age INTEGER, dob TEXT, blood_group TEXT, standards TEXT NOT NULL, section TEXT, profile_pic BLOB, " +
+            "age INTEGER, dob TEXT, blood_group TEXT, standards TEXT, section TEXT, profile_pic BLOB, " +
             "father_name TEXT NOT NULL, father_contact_num TEXT NOT NULL, father_email TEXT, " +
             "mother_name TEXT NOT NULL, mother_contact_num TEXT NOT NULL, mother_email TEXT, " +
             "guardian_name TEXT, guardian_contact_num TEXT, guardian_email TEXT, mentor_name TEXT, mentor_contact_num TEXT, mentor_email TEXT," +
@@ -61,7 +61,7 @@ public class SchoolDataConstants {
             "sender_id TEXT NOT NULL, sender_name TEXT, sender_profile_image BLOB, member_ids TEXT NOT NULL, member_names TEXT, message_type INTEGER, start_date TEXT, end_date TEXT, " +
             "message_id TEXT UNIQUE NOT NULL, album_ids TEXT, saved INTEGER DEFAULT 0, read_status INTEGER DEFAULT 1); " ;
 
-    public final static String CREATE_ALBUM_IMAGES = CREATE_TABLE + ALBUM_IMAGES + " (image_local_path TEXT, " +
+    public final static String CREATE_ALBUM_IMAGES = CREATE_TABLE + ALBUM_IMAGES + " (image_local_path TEXT, image_name TEXT, " +
             "image_date TEXT, album_name TEXT, album_id TEXT, image_id TEXT, member_ids TEXT, status INTEGER DEFAULT 0, " +
             "type TEXT ); ";
 

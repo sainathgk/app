@@ -83,6 +83,8 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
     private String mFromText;
     private String mComposeType;
     private String mAlbumId;
+    private String mTeacherId = "";
+    private boolean isNotReply = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,6 +115,13 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
         String msgId = getIntent().getStringExtra("msg_id");
         mComposeType = getIntent().getStringExtra("compose_type");
 
+        sharePrefs = getApplicationContext().getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
+        mLoginName = sharePrefs.getString(SHARED_LOGIN_NAME, "");
+        mLoginType = sharePrefs.getString(SHARED_LOGIN_TYPE, "");
+        if (!mLoginType.isEmpty()) {
+            mIsTeacher = mLoginType.equalsIgnoreCase("Teacher");
+        }
+
         if (msgBox != null && msgId != null) {
 
             String msgItem = new SchoolDataUtility().getMessage(this.getApplicationContext(), msgBox, mType, msgId);
@@ -138,9 +147,13 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
                 mToText = msgJsonObj.getString("member_names");
                 mFromText = msgJsonObj.getString("sender_name");
 
+                mTeacherId = msgJsonObj.getString("sender_id");
+
                 if (mComposeType.equalsIgnoreCase("reply")) {
+                    isNotReply = false;
                     mToView.setText(mFromText);
                 } else if (mComposeType.equalsIgnoreCase("replyAll")) {
+                    isNotReply = false;
                     mToView.setText(mFromText + ", " + mToText);
                 }
             } catch (JSONException e) {
@@ -152,13 +165,6 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
 
         mDatePick.setOnClickListener(this);
         mTimePick.setOnClickListener(this);
-
-        sharePrefs = getApplicationContext().getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
-        mLoginName = sharePrefs.getString(SHARED_LOGIN_NAME, "");
-        mLoginType = sharePrefs.getString(SHARED_LOGIN_TYPE, "");
-        if (!mLoginType.isEmpty()) {
-            mIsTeacher = mLoginType.equalsIgnoreCase("Teacher");
-        }
 
         mToView.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
 
@@ -196,7 +202,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
 
         if (!mIsTeacher) {
             mRadioCompose.setVisibility(View.GONE);
-            mToView.setText("Teacher");
+            //mToView.setText("Teacher");
         } else {
             mToView.setThreshold(1);
             mToView.setAdapter(adapter);
@@ -266,8 +272,16 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
 
         String[] toStringArray = (String[]) Arrays.asList(textTo.split(",")).toArray();
         JSONArray toSenderIds = new JSONArray();
-        for (int i = 0; i < toStringArray.length - 1; i++) {
+        int toSenderIdsLength = toStringArray.length;
+        if (isNotReply) {
+            toSenderIdsLength--;
+        }
+        for (int i = 0; i < toSenderIdsLength; i++) {
             toSenderIds.put(mStudentsMap.get(toStringArray[i]));
+        }
+
+        if (!mTeacherId.isEmpty()) {
+            toSenderIds.put(mTeacherId);
         }
         c.set(mSelectedYear, mSelectedMonth, mSelectedDay, mSelectedHour, mSelectedMinute);
 
@@ -278,6 +292,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
             compJsonObj.put("body", textDesc);
             compJsonObj.put("message_type", mType);
             compJsonObj.put("sender_id", mLoginName);
+            compJsonObj.put("sender_name", new SchoolDataUtility(mLoginName, true).getStudentName(getApplicationContext())[0]);
             compJsonObj.put("sender_profile_image", Base64.encodeToString(new SchoolDataUtility(mLoginName, true).getMemberProfilePic(this), 0));
             if (mType == 2) {
                 compJsonObj.put("start_date", HomeMainActivity.getDateString(c.getTimeInMillis()));

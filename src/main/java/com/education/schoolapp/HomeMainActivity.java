@@ -103,7 +103,6 @@ public class HomeMainActivity extends AppCompatActivity
 
     ImageLoader imageLoader;
     private MenuItem mUploadMenuItem;
-    private EditText mAlbumEdit;
     private String mAlbumName = "";
     private MultiAutoCompleteTextView mToView;
     private HashMap<String, String> mStudentsMap;
@@ -206,7 +205,8 @@ public class HomeMainActivity extends AppCompatActivity
                     fab.setVisibility(View.VISIBLE);
                 } else {
                     if (position == 0) {
-                        fab.setVisibility(View.VISIBLE);
+                        /*fab.setVisibility(View.VISIBLE);*/
+                        fab.setVisibility(View.GONE);
                     } else {
                         fab.setVisibility(View.GONE);
                     }
@@ -233,9 +233,6 @@ public class HomeMainActivity extends AppCompatActivity
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
-
-        mAlbumEdit = new EditText(this);
-        mAlbumEdit.setInputType(InputType.TYPE_CLASS_TEXT);
 
         mToView = new MultiAutoCompleteTextView(this);
         mToView.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
@@ -436,16 +433,22 @@ public class HomeMainActivity extends AppCompatActivity
     }
 
     private void buildAlbumNameDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final AlertDialog alertDialog = builder.create();
 
         builder.setTitle("Enter Album Name");
+
+        final EditText mAlbumEdit = new EditText(this);
+        mAlbumEdit.setInputType(InputType.TYPE_CLASS_TEXT);
+
         builder.setView(mAlbumEdit);
         builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 mAlbumName = mAlbumEdit.getText().toString();
                 if (mAlbumName != null && !mAlbumName.isEmpty()) {
-                    dialog.dismiss();
+                    dialog.cancel();
+                    alertDialog.dismiss();
                     createAlbumInServer(mAlbumName);
                     //buildMembersDialog();
                 }
@@ -477,23 +480,12 @@ public class HomeMainActivity extends AppCompatActivity
     private void createAlbumInServer(String albumName) {
         JSONObject albumJsonObj = new JSONObject();
         JSONObject albumObj = new JSONObject();
-
+        progress.setTitle("Uploading ... ");
         progress.show();
         try {
             albumJsonObj.put("name", albumName);
             albumJsonObj.put("date", HomeMainActivity.getDateString(System.currentTimeMillis()));
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.school_logo);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 90, outputStream);
-
-            albumJsonObj.put("image_data_arr", new JSONArray().put(Base64.encodeToString(outputStream.toByteArray(), 0)));
-
-            //TODO - Multimedia should be shared to selected members
-            /*String[] toStringArray = (String[]) Arrays.asList(mToNames.split(",")).toArray();
-            JSONArray toSenderIds = new JSONArray();
-            for (int i = 0; i < toStringArray.length - 1; i++) {
-                toSenderIds.put(mStudentsMap.get(toStringArray[i]));
-            }*/
+            albumJsonObj.put("image_data_arr", new SchoolDataUtility().getPendingImagesForAlbum(this));
             albumJsonObj.put("member_id", mLoginName);
 
             albumObj.put("album", albumJsonObj);
@@ -539,24 +531,39 @@ public class HomeMainActivity extends AppCompatActivity
         public void onResponse(String urlString, String networkResult) {
             if (urlString.equalsIgnoreCase(NetworkConstants.CREATE_ALBUM)) {
                 if (networkResult == null) {
+                    progress.dismiss();
                     return;
                 }
+
                 try {
                     JSONObject albumResp = new JSONObject(networkResult);
-                    ContentValues albumValues = new ContentValues();
-                    String selection = " status == 0";
 
-                    albumValues.put("album_name", albumResp.getString("name"));
-                    mAlbumId = albumResp.getJSONObject("_id").getString("$oid");
-                    albumValues.put("album_id", mAlbumId);
+                    JSONArray imageArray = albumResp.getJSONArray("multimediums");
+                    for (int i = 0; i < imageArray.length(); i++) {
+                        ContentValues albumValues = new ContentValues();
+                        String selection = " image_name like '" + imageArray.getJSONObject(i).getString("name") + "'";
 
-                    getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
-                            albumValues, selection, null);
-                    uploadImagesToServer();
+                        albumValues.put("album_name", albumResp.getString("name"));
+                        mAlbumId = albumResp.getJSONObject("_id").getString("$oid");
+                        albumValues.put("album_id", mAlbumId);
+                        albumValues.put("status", 1);
+                        albumValues.put("image_id", imageArray.getJSONObject(i).getJSONObject("_id").getString("$oid"));
 
+                        getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                                albumValues, selection, null);
+                    }
+                    //uploadImagesToServer();
+
+                    Intent composeIntent = new Intent(getApplicationContext(), ComposeActivity.class);
+                    composeIntent.putExtra("Type", 4);
+                    composeIntent.putExtra("albumId", mAlbumId);
+
+                    startActivity(composeIntent);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+                progress.dismiss();
+
             } else if (urlString.equalsIgnoreCase(NetworkConstants.CREATE_MULTIMEDIA)) {
                 mCurrentImg++;
                 if (networkResult == null) {
@@ -602,14 +609,16 @@ public class HomeMainActivity extends AppCompatActivity
                 progress.show();
                 try {
                     JSONObject imageJsonObj = new JSONObject(networkResult);
+                    String imageName = imageJsonObj.getString("name");
                     String imageString = imageJsonObj.getString("content");
-                    String imagePath = saveImageToGallery(imageString);
+                    String imagePath = saveImageToGallery(imageString, imageName);
                     String imageId = imageJsonObj.getJSONObject("_id").getString("$oid");
 
                     ContentValues imgValues = new ContentValues();
                     String selection = " image_id like '" + imageId + "'";
 
                     imgValues.put("image_local_path", imagePath);
+                    imgValues.put("image_name", imageName);
                     imgValues.put("image_date", imageJsonObj.getString("date"));
                     imgValues.put("status", 1);
 
@@ -627,18 +636,22 @@ public class HomeMainActivity extends AppCompatActivity
         }
     }
 
-    private String saveImageToGallery(String imgString) {
-        verifyStoragePermissions(this);
-        String imageName = System.currentTimeMillis() + ".jpg";
-        File imageFile = new File(mAppDir, imageName);
-        byte[] imageBytes = Base64.decode(imgString, 0);
-
-        Bitmap imgBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-        if (imgBitmap == null) {
+    private String saveImageToGallery(String imgString, String imgName) {
+        if (imgString == null) {
             return "";
         }
+        verifyStoragePermissions(this);
+        String imageName = imgName;
+        File imageFile = new File(mAppDir, imageName);
         FileOutputStream output = null;
         try {
+            byte[] imageBytes = Base64.decode(imgString, 0);
+
+            Bitmap imgBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+            if (imgBitmap == null) {
+                return "";
+            }
+
             output = new FileOutputStream(imageFile);
             // Compress into png format image from 0% - 100%
             imgBitmap.compress(Bitmap.CompressFormat.JPEG, 100, output);
@@ -647,13 +660,15 @@ public class HomeMainActivity extends AppCompatActivity
 
             String url = MediaStore.Images.Media.insertImage(getContentResolver(), imgBitmap,
                     imageName, imageName);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        Log.i("Album", "Image Path - "+imageFile.getAbsolutePath());
+        Log.i("Album", "Image Path - " + imageFile.getAbsolutePath());
 
         return imageFile.getAbsolutePath();
 
@@ -718,6 +733,7 @@ public class HomeMainActivity extends AppCompatActivity
                 } else if (items[item].equals("Choose from Library")) {
                     Intent intent = new Intent(
                             Action.ACTION_MULTIPLE_PICK);
+                    intent.setClass(getApplicationContext(), CustomGalleryActivity.class);
                     startActivityForResult(intent,
                             SELECT_FILE);
                 } else if (items[item].equals("Cancel")) {

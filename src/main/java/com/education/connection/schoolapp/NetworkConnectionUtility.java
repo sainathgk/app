@@ -34,9 +34,9 @@ public class NetworkConnectionUtility {
 
     }
 
-    public void getStudents(String className) {
+    public void getStudents(String className, String sectionName) {
         if (NetworkConstants.isServerON) {
-            new AsyncNetwork().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "GET", NetworkConstants.GET_CLASS_STUDENTS + className + ".json");
+            new AsyncNetwork().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "GET", NetworkConstants.GET_CLASS_STUDENTS + className + "/" + sectionName + ".json");
         }
     }
 

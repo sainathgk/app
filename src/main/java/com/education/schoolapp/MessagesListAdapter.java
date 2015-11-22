@@ -130,7 +130,7 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessagesListAdapte
 
         ViewHolder vh = new ViewHolder(itemView);
 
-        vh.mMsgFrom = ((TextView) itemView.findViewById(R.id.sender_profile_text));
+        //vh.mMsgFrom = ((TextView) itemView.findViewById(R.id.sender_profile_text));
         vh.mMsgTitle = ((TextView) itemView.findViewById(R.id.msg_title));
         vh.mMsgDescription = ((TextView) itemView.findViewById(R.id.msg_description));
         vh.mMsgTimeStamp = ((TextView) itemView.findViewById(R.id.msg_time));
@@ -162,17 +162,17 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessagesListAdapte
         byte[] senderImageBlob = msgData.get(position).msgFromImage;
         if (senderImageBlob != null) {
             holder.mSenderImage.setImageBitmap(HomeMainActivity.GetBitmapClippedCircle(BitmapFactory.decodeByteArray(senderImageBlob, 0, senderImageBlob.length)));
-            holder.mMsgFrom.setVisibility(View.GONE);
+//            holder.mMsgFrom.setVisibility(View.GONE);
             holder.mSenderImage.setVisibility(View.VISIBLE);
         } else {
-            String senderText = "";
+  /*          String senderText = "";
             if (mMsgBox.equalsIgnoreCase("Inbox")) {
                 senderText = msgData.get(position).msgFrom.substring(0,1);
             } else {
                 senderText = msgData.get(position).msgTo.substring(0,1);
             }
-            holder.mMsgFrom.setText(senderText);
-            holder.mMsgFrom.setVisibility(View.VISIBLE);
+            holder.mMsgFrom.setText(senderText);*/
+            //holder.mMsgFrom.setVisibility(View.VISIBLE);
             holder.mSenderImage.setVisibility(View.GONE);
         }
     }

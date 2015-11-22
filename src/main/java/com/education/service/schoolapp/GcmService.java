@@ -16,6 +16,7 @@ import android.util.Log;
 import com.education.connection.schoolapp.JSONUtility;
 import com.education.connection.schoolapp.NetworkConnectionUtility;
 import com.education.connection.schoolapp.NetworkConstants;
+import com.education.database.schoolapp.SchoolDataConstants;
 import com.education.database.schoolapp.SchoolDataUtility;
 import com.education.schoolapp.HomeMainActivity;
 import com.education.schoolapp.R;
@@ -113,6 +114,21 @@ public class GcmService extends GcmListenerService {
                     String memberIdString = Joiner.on(",").skipNulls().join(memberIds);
                     msgValues.put("member_ids", memberIdString);
                     msgValues.put("member_names", Joiner.on(",").skipNulls().join(memberNames));
+
+                    if (messageObj.getString("album_ids") != null && !messageObj.getString("album_ids").equalsIgnoreCase("null")) {
+                        JSONArray albumArray = messageObj.getJSONArray("album_ids");
+                        if (albumArray != null) {
+                            String[] albumIds = new String[albumArray.length()];
+                            for (int i = 0; i < albumIds.length; i++) {
+                                albumIds[i] = albumArray.getString(i);
+                                /*mAlbumIds.add( mAlbumIdx, albumArray.getString(i));
+                                mAlbumIdx++;*/
+                                networkConn.getAlbum(albumIds[i]);
+                            }
+                            msgValues.put("album_ids", Joiner.on(",").skipNulls().join(albumIds));
+                        }
+                    }
+
                     msgValues.put("sender_profile_image", Base64.decode(messageObj.getString("sender_profile_image"), 0));
                     //TODO : To be fixed, get the sender name from the Message Response only
                     //msgValues.put("sender_name", new SchoolDataUtility().getTeacherNameforStudent(getApplicationContext(), LoginName));
@@ -142,6 +158,40 @@ public class GcmService extends GcmListenerService {
                     noti.defaults |= Notification.DEFAULT_ALL;
 
                     mNotiManager.notify(10, noti);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } else if (urlString.startsWith(NetworkConstants.GET_ALBUM)) {
+                if (networkResult == null || networkResult.equalsIgnoreCase("Bad Request")) {
+                    Log.i("Network", "Get Album API");
+                }
+                try {
+                    JSONObject albumObj = new JSONObject(networkResult);
+                    JSONArray albumArray = albumObj.getJSONArray("multimediums");
+                    if (albumArray != null) {
+                        int imageLength = albumArray.length();
+                        if (imageLength > 0) {
+                            ContentValues[] albumValues = new ContentValues[imageLength];
+                            ContentValues albumMsgUpdate = new ContentValues();
+                            String albumName = "";
+                            for (int albIdx = 0; albIdx < imageLength; albIdx++) {
+                                albumValues[albIdx] = new ContentValues();
+
+                                albumValues[albIdx].put("type", "Received");
+                                albumName = albumObj.getString("name");
+                                albumValues[albIdx].put("album_name", albumName);
+                                albumValues[albIdx].put("album_id", albumObj.getJSONObject("_id").getString("$oid"));
+                                albumValues[albIdx].put("image_id", albumArray.getJSONObject(albIdx).getJSONObject("_id").getString("$oid"));
+                            }
+                            getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES), albumValues);
+
+                            /*albumMsgUpdate.put("read_status", 0);
+                            String selection = " album_name like '" + albumName + "'";
+
+                            getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL),
+                                    albumMsgUpdate, selection, null);*/
+                        }
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

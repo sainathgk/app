@@ -347,7 +347,7 @@ public class SchoolDataUtility {
     }
 
     public String getMessage(Context context, String msgBox, int msgType, String msgId) {
-        String[] messageProjection = {"message_id", "member_names", "subject", "body", "start_date", "sender_name", "sender_profile_image"};
+        String[] messageProjection = {"message_id", "member_names", "subject", "body", "start_date", "sender_name", "sender_profile_image", "sender_id"};
         String contentString = "content://com.education.schoolapp/";
         Cursor msgCursor = null;
         String selection = " message_id like '" + msgId + "' and message_type = " + msgType;
@@ -554,6 +554,33 @@ public class SchoolDataUtility {
         return galleryList;
     }
 
+    public JSONArray getPendingImagesForAlbum(Context context) {
+        JSONArray pendImagesArray = new JSONArray();
+        Cursor pendImageCursor = null;
+        String[] projection = {"image_local_path", "image_name"};
+        String selection = " type like 'Sent' and status == 0";
+
+        pendImageCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                projection, selection, null, null);
+
+        if (pendImageCursor != null && pendImageCursor.getCount() > 0) {
+            while (pendImageCursor.moveToNext()) {
+                JSONObject pendImagesObj = new JSONObject();
+
+                try {
+                    pendImagesObj.put("name", pendImageCursor.getString(pendImageCursor.getColumnIndex("image_name")));
+                    pendImagesObj.put("data", getSelectedImageString(pendImageCursor.getString(
+                            pendImageCursor.getColumnIndex("image_local_path"))));
+
+                    pendImagesArray.put(pendImagesObj);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return pendImagesArray;
+    }
+
     public JSONArray getPendingImages(Context context) {
         JSONArray pendImagesArray = new JSONArray();
         Cursor pendImageCursor = null;
@@ -590,7 +617,7 @@ public class SchoolDataUtility {
         String[] projection = {"image_id"};
         String selection = " type like 'Received' and status == 0";
 
-        pendImageCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI+SchoolDataConstants.ALBUM_IMAGES),
+        pendImageCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
                 projection, selection, null, null);
 
         if (pendImageCursor != null && pendImageCursor.getCount() > 0) {

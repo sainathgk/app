@@ -27,7 +27,6 @@ import com.education.connection.schoolapp.JSONUtility;
 import com.education.connection.schoolapp.NetworkConnectionUtility;
 import com.education.connection.schoolapp.NetworkConstants;
 import com.education.database.schoolapp.SchoolDataConstants;
-import com.education.database.schoolapp.SchoolDataUtility;
 import com.education.service.schoolapp.QuickstartPreferences;
 import com.education.service.schoolapp.RegistrationIntentService;
 import com.google.android.gms.common.ConnectionResult;
@@ -42,7 +41,6 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -66,7 +64,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private ProgressDialog progress;
     private NetworkConnectionUtility networkConn;
     private String mOid;
-    private String mClassName;
+    private String mClassName = "";
+    private String mSectionName = "";
     private int mMessageArrayLength;
     private int mCurrentMsg = 1;
     private int mMessageFinalCount;
@@ -78,6 +77,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private String[] receivedAlbum;
     private ArrayList<String> mAlbumIds = new ArrayList<String>();
     private int mAlbumIdx = 0;
+    private String[] toSectionArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -147,7 +147,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 }
                 int userType = -1;
                 JSONUtility jsonUtility = new JSONUtility();
-                String[] loginColumns = {"member_name", "dob", "age", "blood_group", "standards", "section",
+                String[] loginColumns = {"member_name", "dob", "age", "blood_group",
                         "father_name", "father_contact_num", "father_email", "mother_name", "mother_contact_num", "mother_email",
                         "guardian_name", "guardian_contact_num", "guardian_email", "mentor_name", "mentor_contact_num", "mentor_email",
                         "loginid", "gcmid", "role", "subjects"};
@@ -161,16 +161,32 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     userValues.put("oid", mOid);
                     userValues.put("profile_pic", Base64.decode(userJsonObj.getString("profile_pic"), 0));
                     userType = userJsonObj.getInt("role");
-                    getContentResolver().insert(Uri.parse("content://com.education.schoolapp/user_profile"), userValues);
 
-                    mClassName = userJsonObj.getString("standards");
+                    JSONArray standardsArray = userJsonObj.getJSONArray("standards");
+                    int standardsLength = standardsArray.length();
+                    for (int i = 0; i < standardsLength; i++) {
+                        JSONArray sectionArray = standardsArray.getJSONObject(i).getJSONArray("section");
+                        for (int j = 0; j < sectionArray.length(); j++) {
+                            mClassName = mClassName.concat(standardsArray.getJSONObject(i).getString("standard_class"));
+                            mSectionName = mSectionName.concat(sectionArray.getString(j));
+                            if (standardsLength > 1 && i + 1 < standardsLength) {
+                                mClassName = mClassName.concat(",");
+                                mSectionName = mSectionName.concat(",");
+                            }
+                        }
+                    }
 
                     if (mClassName != null) {
+                        userValues.put("standards", mClassName);
+                        userValues.put("section", mSectionName);
                         toStringArray = (String[]) Arrays.asList(mClassName.split(",")).toArray();
+                        toSectionArray = (String[]) Arrays.asList(mSectionName.split(",")).toArray();
                         mClassesLength = toStringArray.length;
 
+                        getContentResolver().insert(Uri.parse("content://com.education.schoolapp/user_profile"), userValues);
+
                         for (int clas = 0; clas < mClassesLength; clas++)
-                            networkConn.getStudents(toStringArray[clas]);
+                            networkConn.getStudents(toStringArray[clas], toSectionArray[clas]);
                     }
                     JSONArray messageArray = userJsonObj.getJSONArray("messages");
                     int msgArrayLength = messageArray.length();
@@ -267,21 +283,26 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     ContentValues msgValues = jsonUtility.fromJSON(messageObj);
                     msgValues.put("message_id", messageObj.getJSONObject("_id").getString("$oid"));
 
-                    JSONArray membersArray = messageObj.getJSONArray("member_ids");
+                    JSONArray membersArray = messageObj.getJSONArray("members");
                     String[] memberIds = new String[membersArray.length()];
                     String[] memberNames = new String[membersArray.length()];
-                    HashMap<String, String> mStudentsMap = new SchoolDataUtility().getClassStudents(getApplicationContext());
+                    for (int i = 0; i < memberIds.length; i++) {
+                        memberIds[i] = membersArray.getJSONObject(i).getJSONObject("_id").getString("$oid");
+                        memberNames[i] = membersArray.getJSONObject(i).getString("member_name");
+                    }
+                    /*HashMap<String, String> mStudentsMap = new SchoolDataUtility().getClassStudents(getApplicationContext());
                     if (mStudentsMap != null) {
                         for (int i = 0; i < memberIds.length; i++) {
-                            memberIds[i] = membersArray.getJSONObject(i).getString("$oid");
-                            for (Map.Entry<String, String> entry : mStudentsMap.entrySet()) {
+                            memberIds[i] = membersArray.getJSONObject(i).getJSONObject("_id").getString("$oid");
+                            memberNames[i] = membersArray.getJSONObject(i).getString("member_name");
+                            *//*for (Map.Entry<String, String> entry : mStudentsMap.entrySet()) {
                                 if (entry.getValue().equals(memberIds[i])) {
                                     System.out.println(entry.getKey());
                                     memberNames[i] = entry.getKey();
                                 }
-                            }
+                            }*//*
                         }
-                    }
+                    }*/
 
                     String memberIdString = Joiner.on(",").skipNulls().join(memberIds);
                     msgValues.put("member_ids", memberIdString);
@@ -293,15 +314,15 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                             String[] albumIds = new String[albumArray.length()];
                             for (int i = 0; i < albumIds.length; i++) {
                                 albumIds[i] = albumArray.getString(i);
-                                mAlbumIds.add( mAlbumIdx, albumArray.getString(i));
+                                mAlbumIds.add(mAlbumIdx, albumArray.getString(i));
                                 mAlbumIdx++;
                             }
                             msgValues.put("album_ids", Joiner.on(",").skipNulls().join(albumIds));
                         }
                     }
                     msgValues.put("sender_profile_image", Base64.decode(messageObj.getString("sender_profile_image"), 0));
-                    //TODO : To be fixed, get the sender name from the Message Response only
-                    msgValues.put("sender_name", new SchoolDataUtility().getTeacherNameforStudent(getApplicationContext(), mOid));
+                    //msgValues.put("sender_name", new SchoolDataUtility().getTeacherNameforStudent(getApplicationContext(), mOid));
+                    msgValues.put("sender_name", messageObj.getString("sender_name"));
 
                     getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
 

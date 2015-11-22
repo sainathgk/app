@@ -20,6 +20,7 @@ public class NetworkConstants {
     public final static String GET_TEACHER_ATTENDANCE = HOST_URL + "getTeacherProfile?id=";
 
     //GET -  All the class students used to post Message
+    //GET - http://<server_ip>/getStudents/<className>/<section>.json
     public final static String GET_CLASS_STUDENTS = HOST_URL + "/getStudents/";
 
     //GET - http://<server_ip>/getAllMessages?Class=LKG&id=758x584d6
