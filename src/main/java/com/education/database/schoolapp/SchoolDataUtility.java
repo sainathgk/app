@@ -644,7 +644,7 @@ public class SchoolDataUtility {
         bm = BitmapFactory.decodeFile(selectedImagePath, options);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        bm.compress(Bitmap.CompressFormat.PNG, 90, outputStream);
+        bm.compress(Bitmap.CompressFormat.PNG, 70, outputStream);
 
         return Base64.encodeToString(outputStream.toByteArray(), 0);
     }

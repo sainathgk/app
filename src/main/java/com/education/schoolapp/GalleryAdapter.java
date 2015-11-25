@@ -1,6 +1,8 @@
 package com.education.schoolapp;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -144,8 +146,30 @@ public class GalleryAdapter extends BaseAdapter {
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
+        holder.imagePosition = position;
+
         holder.imgQueue.setTag(position);
 
+        convertView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if ((ViewHolder) v.getTag() == null) {
+                    return;
+                }
+
+                int posi = ((ViewHolder) v.getTag()).imagePosition;
+                if (data.get(posi).syncState == -1) {
+                    return;
+                }
+
+                String imagePath = "file://" + data.get(posi).sdcardPath;
+
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_VIEW);
+                intent.setDataAndType(Uri.parse(imagePath), "image/*");
+                mContext.startActivity(intent);
+            }
+        });
         try {
 
             imageLoader.displayImage("file://" + data.get(position).sdcardPath,
@@ -183,6 +207,7 @@ public class GalleryAdapter extends BaseAdapter {
     public class ViewHolder {
         ImageView imgQueue;
         ImageView imgQueueMultiSelected;
+        int imagePosition;
     }
 
     public void clearCache() {

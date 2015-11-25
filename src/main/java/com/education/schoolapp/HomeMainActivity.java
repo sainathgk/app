@@ -63,6 +63,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class HomeMainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -214,14 +215,22 @@ public class HomeMainActivity extends AppCompatActivity
                 if (position == 2) {
                     fab.setImageResource(android.R.drawable.ic_menu_camera);
                     if (mIsTeacher) {
-                        mUploadMenuItem.setVisible(true);
+                        if (mUploadMenuItem != null) {
+                            mUploadMenuItem.setVisible(true);
+                        }
                     } else {
-                        mDownloadMenuItem.setVisible(true);
+                        if (mDownloadMenuItem != null) {
+                            mDownloadMenuItem.setVisible(true);
+                        }
                     }
                 } else {
                     fab.setImageResource(android.R.drawable.ic_dialog_email);
-                    mUploadMenuItem.setVisible(false);
-                    mDownloadMenuItem.setVisible(false);
+                    if (mUploadMenuItem != null) {
+                        mUploadMenuItem.setVisible(false);
+                    }
+                    if (mDownloadMenuItem != null) {
+                        mDownloadMenuItem.setVisible(false);
+                    }
                 }
             }
 
@@ -280,6 +289,7 @@ public class HomeMainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        downloadImagesFromServer();
     }
 
     @Override
@@ -375,7 +385,7 @@ public class HomeMainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
 
-        getMenuInflater().inflate(R.menu.home_main, menu);
+        //getMenuInflater().inflate(R.menu.home_main, menu);
         mUploadMenuItem = menu.findItem(R.id.action_upload);
         mDownloadMenuItem = menu.findItem(R.id.action_download);
 
@@ -391,10 +401,11 @@ public class HomeMainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_upload) {
-            buildAlbumNameDialog();
+            //buildAlbumNameDialog();
+            createAlbumInServer(randomString(6));
             return true;
         } else if (id == R.id.action_download) {
-            downloadImagesFromServer();
+            //downloadImagesFromServer();
             return true;
         }
 
@@ -477,6 +488,16 @@ public class HomeMainActivity extends AppCompatActivity
         builder.show();
     }
 
+    static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    static Random rnd = new Random();
+
+    private String randomString(int len) {
+        StringBuilder sb = new StringBuilder(len);
+        for (int i = 0; i < len; i++)
+            sb.append(AB.charAt(rnd.nextInt(AB.length())));
+        return sb.toString();
+    }
+
     private void createAlbumInServer(String albumName) {
         JSONObject albumJsonObj = new JSONObject();
         JSONObject albumObj = new JSONObject();
@@ -519,6 +540,8 @@ public class HomeMainActivity extends AppCompatActivity
             try {
                 String imageId = imagesIdArray.getString(i);
                 Log.i("Network", "Download Image ID is " + imageId);
+                progress.setTitle("Downloading ...");
+                progress.show();
                 networkConn.getMultimedia(imageId);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -603,10 +626,13 @@ public class HomeMainActivity extends AppCompatActivity
             } else if (urlString.startsWith(NetworkConstants.GET_MULTIMEDIA)) {
                 mCurrentImg++;
                 if (networkResult == null) {
+                    if (mCurrentImg == mDownloadImagesLength) {
+                        progress.dismiss();
+                    }
                     return;
                 }
-                progress.setTitle("Downloading ... " + mCurrentImg + "/" + mDownloadImagesLength);
-                progress.show();
+                /*progress.setTitle("Downloading ... " + mCurrentImg + "/" + mDownloadImagesLength);
+                progress.show();*/
                 try {
                     JSONObject imageJsonObj = new JSONObject(networkResult);
                     String imageName = imageJsonObj.getString("name");
@@ -757,13 +783,12 @@ public class HomeMainActivity extends AppCompatActivity
     }
 
     private void onCaptureImageResult(Intent data) {
-        String single_path = data.getStringExtra("single_path");
         Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         thumbnail.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
 
-        File destination = new File(Environment.getExternalStorageDirectory(),
-                System.currentTimeMillis() + ".jpg");
+        String fileName = System.currentTimeMillis() + ".jpg";
+        File destination = new File(mAppDir, fileName);
 
         FileOutputStream fo;
         try {
@@ -777,25 +802,26 @@ public class HomeMainActivity extends AppCompatActivity
             e.printStackTrace();
         }
 
-        //TODO. set the image to Album Grid view
-        //ivImage.setImageBitmap(thumbnail);
         ContentValues imgValues = new ContentValues();
-        imgValues.put("image_local_path", single_path);
+        imgValues.put("image_local_path", destination.toString());
         imgValues.put("image_date", HomeMainActivity.getDateString(System.currentTimeMillis()));
+        imgValues.put("image_name", fileName);
         imgValues.put("type", "sent");
 
         getContentResolver().insert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES), imgValues);
+
+        createAlbumInServer(randomString(6));
     }
 
     private void onSelectFromGalleryResult(Intent data) {
-
+        createAlbumInServer(randomString(6));
     }/*{
         Uri selectedImageUri = data.getData();
         String[] projection = {MediaStore.MediaColumns.DATA};
         Cursor cursor = managedQuery(selectedImageUri, projection, null, null,
                 null);
         int column_index = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
-        cursor.moveToFirst();
+        .moveToFirst();
 
         String selectedImagePath = cursor.getString(column_index);
 

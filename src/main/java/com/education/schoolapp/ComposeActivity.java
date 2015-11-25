@@ -1,6 +1,7 @@
 package com.education.schoolapp;
 
 import android.app.DatePickerDialog;
+import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
 import android.content.ContentValues;
 import android.content.Context;
@@ -85,6 +86,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
     private String mAlbumId;
     private String mTeacherId = "";
     private boolean isNotReply = true;
+    private ProgressDialog progress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -207,6 +209,11 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
             mToView.setThreshold(1);
             mToView.setAdapter(adapter);
         }
+
+        progress = new ProgressDialog(this);
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setIndeterminate(true);
+        progress.setTitle("Sending ...");
     }
 
     @Override
@@ -265,6 +272,9 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
                 return;
             }
         }
+
+        progress.show();
+
         networkConn = new NetworkConnectionUtility();
 
         NetworkResp networkResp = new NetworkResp();
@@ -432,6 +442,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
                     }
                 }
                 getContentResolver().update(Uri.parse("content://com.education.schoolapp/sent_messages_all"), msgRespValues, selection, null);
+                progress.dismiss();
                 finish();
             }
         }
