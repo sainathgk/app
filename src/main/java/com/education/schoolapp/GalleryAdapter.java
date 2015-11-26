@@ -150,26 +150,28 @@ public class GalleryAdapter extends BaseAdapter {
 
         holder.imgQueue.setTag(position);
 
-        convertView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if ((ViewHolder) v.getTag() == null) {
-                    return;
+        if (!isActionMultiplePick) {
+            convertView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if ((ViewHolder) v.getTag() == null) {
+                        return;
+                    }
+
+                    int posi = ((ViewHolder) v.getTag()).imagePosition;
+                    if (data.get(posi).syncState == -1) {
+                        return;
+                    }
+
+                    String imagePath = "file://" + data.get(posi).sdcardPath;
+
+                    Intent intent = new Intent();
+                    intent.setAction(Intent.ACTION_VIEW);
+                    intent.setDataAndType(Uri.parse(imagePath), "image/*");
+                    mContext.startActivity(intent);
                 }
-
-                int posi = ((ViewHolder) v.getTag()).imagePosition;
-                if (data.get(posi).syncState == -1) {
-                    return;
-                }
-
-                String imagePath = "file://" + data.get(posi).sdcardPath;
-
-                Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.parse(imagePath), "image/*");
-                mContext.startActivity(intent);
-            }
-        });
+            });
+        }
         try {
 
             imageLoader.displayImage("file://" + data.get(position).sdcardPath,
@@ -187,14 +189,14 @@ public class GalleryAdapter extends BaseAdapter {
                 holder.imgQueueMultiSelected
                         .setSelected(data.get(position).isSeleted);
 
-            }
-
-            if (data.get(position).syncState == 1) {
-                holder.imgQueueMultiSelected.setBackgroundResource(R.drawable.ic_done_black_24dp);
-                holder.imgQueueMultiSelected.setVisibility(View.VISIBLE);
-            } else if (data.get(position).syncState == 0) {
-                holder.imgQueueMultiSelected.setBackgroundResource(R.drawable.ic_cached_black_24dp);
-                holder.imgQueueMultiSelected.setVisibility(View.VISIBLE);
+            } else {
+                if (data.get(position).syncState == 1) {
+                    holder.imgQueueMultiSelected.setBackgroundResource(R.drawable.ic_done_black_24dp);
+                    holder.imgQueueMultiSelected.setVisibility(View.VISIBLE);
+                } else if (data.get(position).syncState == 0) {
+                    holder.imgQueueMultiSelected.setBackgroundResource(R.drawable.ic_cached_black_24dp);
+                    holder.imgQueueMultiSelected.setVisibility(View.VISIBLE);
+                }
             }
 
         } catch (Exception e) {
