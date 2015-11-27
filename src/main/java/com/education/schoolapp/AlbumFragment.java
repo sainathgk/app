@@ -1,6 +1,7 @@
 package com.education.schoolapp;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -130,13 +131,22 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
     public void onResume() {
         super.onResume();
         if (mParam3) {
-            adapter.addAll(new SchoolDataUtility().getUpdatedImages(this.getContext(), "Sent"));
+            adapter.addAll(new SchoolDataUtility().getUpdatedImages(this.getActivity().getApplicationContext(), "Sent"));
         } else {
-            adapter.addAll(new SchoolDataUtility().getUpdatedImages(this.getContext(), "Received"));
+            adapter.addAll(new SchoolDataUtility().getUpdatedImages(this.getActivity().getApplicationContext(), "Received"));
         }
         adapter.notifyDataSetChanged();
         mListView.invalidate();
+    }
 
+    public void updateAlbum(Context context) {
+        if (adapter != null) {
+            adapter.addAll(new SchoolDataUtility().getUpdatedImages(context, "Received"));
+            adapter.notifyDataSetChanged();
+        }
+        if (mListView != null) {
+            mListView.invalidate();
+        }
     }
 
     @Override

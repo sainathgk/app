@@ -62,7 +62,7 @@ public class SchoolDataConstants {
             "message_id TEXT UNIQUE NOT NULL, album_ids TEXT, saved INTEGER DEFAULT 0, read_status INTEGER DEFAULT 1); " ;
 
     public final static String CREATE_ALBUM_IMAGES = CREATE_TABLE + ALBUM_IMAGES + " (image_local_path TEXT, image_name TEXT, " +
-            "image_date TEXT, album_name TEXT, album_id TEXT, image_id TEXT, member_ids TEXT, status INTEGER DEFAULT 0, " +
+            "image_date TEXT, album_name TEXT, album_id TEXT, image_id TEXT UNIQUE, member_ids TEXT, status INTEGER DEFAULT 0, " +
             "type TEXT ); ";
 
     public final static String CREATE_ALBUM_DETAILS = CREATE_TABLE + ALBUM_DETAILS + " (album_name TEXT NOT NULL, album_date TEXT NOT NULL, " +
@@ -81,7 +81,7 @@ public class SchoolDataConstants {
      * 2 - Notification
      * 3 - Multimedia
      */
-    public final static String CREATE_SERVER_MESSAGE_IDS = CREATE_TABLE + SERVER_MESSAGE_IDS + " (message_id TEXT NOT NULL, " +
+    public final static String CREATE_SERVER_MESSAGE_IDS = CREATE_TABLE + SERVER_MESSAGE_IDS + " (message_id TEXT NOT NULL UNIQUE, " +
             "message_type INTEGER NOT NULL, status INTEGER DEFAULT 0); ";
 
     public final static String CREATE_CLASS_STUDENTS = CREATE_TABLE + CLASS_STUDENTS + " (student_id TEXT UNIQUE NOT NULL, " +

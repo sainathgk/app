@@ -309,7 +309,7 @@ public class SchoolDataUtility {
     public String[] getPendingMessages(Context context) {
         String[] pendingMsgs = null;
         String[] projection = {"message_id"};
-        String selection = " status = 0 and message_type == 1 or message_type == 2 ";
+        String selection = " status = 0 ";
         Cursor msgCursor = null;
 
         msgCursor = context.getContentResolver().query(Uri.parse("content://com.education.schoolapp/server_message_ids"), projection, selection, null, null);

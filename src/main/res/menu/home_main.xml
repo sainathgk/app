@@ -4,10 +4,15 @@
     <item android:id="@+id/action_upload" android:title="@string/action_upload"
         android:icon="@android:drawable/ic_menu_upload"
         android:visible="false"
-        android:orderInCategory="100" app:showAsAction="always" />
+        android:orderInCategory="101" app:showAsAction="always" />
 
     <item android:id="@+id/action_download" android:title="@string/action_download"
         android:icon="@android:drawable/ic_menu_set_as"
         android:visible="false"
-        android:orderInCategory="100" app:showAsAction="always" />
+        android:orderInCategory="101" app:showAsAction="always" />
+
+    <item android:id="@+id/menu_refresh" android:title="Refresh"
+        android:icon="@drawable/ic_refresh_white_24dp"
+        app:showAsAction="always"
+        android:orderInCategory="100" />
 </menu>

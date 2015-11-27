@@ -43,11 +43,13 @@ import android.widget.ImageView;
 import android.widget.MultiAutoCompleteTextView;
 import android.widget.TextView;
 
+import com.education.connection.schoolapp.JSONUtility;
 import com.education.connection.schoolapp.NetworkConnectionUtility;
 import com.education.connection.schoolapp.NetworkConstants;
 import com.education.database.schoolapp.SchoolDataConstants;
 import com.education.database.schoolapp.SchoolDataUtility;
 import com.education.service.schoolapp.SchoolDataContentObserver;
+import com.google.common.base.Joiner;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import org.json.JSONArray;
@@ -60,6 +62,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -116,6 +119,13 @@ public class HomeMainActivity extends AppCompatActivity
     private int mDownloadImagesLength;
     private File mAppDir;
     private String mAlbumId;
+    private String[] receivedMsgs;
+    private String[] pendingMsgs;
+    private int mMessageArrayLength;
+    private int mCurrentMsg;
+    private int mMessageFinalCount;
+    private ArrayList<String> mAlbumIds = new ArrayList<String>();
+    private int mAlbumIdx = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -189,11 +199,11 @@ public class HomeMainActivity extends AppCompatActivity
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
         mViewPager.setCurrentItem(1, true);
+
         mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -214,7 +224,7 @@ public class HomeMainActivity extends AppCompatActivity
                 }
                 if (position == 2) {
                     fab.setImageResource(android.R.drawable.ic_menu_camera);
-                    if (mIsTeacher) {
+                    /*if (mIsTeacher) {
                         if (mUploadMenuItem != null) {
                             mUploadMenuItem.setVisible(true);
                         }
@@ -222,15 +232,15 @@ public class HomeMainActivity extends AppCompatActivity
                         if (mDownloadMenuItem != null) {
                             mDownloadMenuItem.setVisible(true);
                         }
-                    }
+                    }*/
                 } else {
                     fab.setImageResource(android.R.drawable.ic_dialog_email);
-                    if (mUploadMenuItem != null) {
+                    /*if (mUploadMenuItem != null) {
                         mUploadMenuItem.setVisible(false);
                     }
                     if (mDownloadMenuItem != null) {
                         mDownloadMenuItem.setVisible(false);
-                    }
+                    }*/
                 }
             }
 
@@ -270,6 +280,18 @@ public class HomeMainActivity extends AppCompatActivity
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
         progress.setTitle("Uploading ...");
+        progress.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                updateFragments();
+            }
+        });
+        progress.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                updateFragments();
+            }
+        });
 
         networkConn = new NetworkConnectionUtility();
 
@@ -300,6 +322,10 @@ public class HomeMainActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
+    }
+
+    private String getFragmentTag(int pos) {
+        return "android:switcher:" + R.id.container + ":" + pos;
     }
 
     public static Bitmap GetBitmapClippedCircle(Bitmap bitmap) {
@@ -385,7 +411,7 @@ public class HomeMainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
 
-        //getMenuInflater().inflate(R.menu.home_main, menu);
+        getMenuInflater().inflate(R.menu.home_main, menu);
         mUploadMenuItem = menu.findItem(R.id.action_upload);
         mDownloadMenuItem = menu.findItem(R.id.action_download);
 
@@ -406,6 +432,12 @@ public class HomeMainActivity extends AppCompatActivity
             return true;
         } else if (id == R.id.action_download) {
             //downloadImagesFromServer();
+            return true;
+        } else if (id == R.id.menu_refresh) {
+            progress.setTitle("Refreshing ...");
+            progress.show();
+
+            networkConn.getUpdateMessages(mLoginName);
             return true;
         }
 
@@ -549,6 +581,20 @@ public class HomeMainActivity extends AppCompatActivity
         }
     }
 
+    public void updateFragments() {
+        for (int i = 0; i < mViewPager.getAdapter().getCount(); i++) {
+            Fragment fragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(i));
+            if (i == 2) {
+                ((AlbumFragment) fragment).updateAlbum(getApplicationContext());
+            } else {
+                ((MessagesFragment) fragment).updateMessages();
+            }
+
+            mViewPager.getAdapter().notifyDataSetChanged();
+            mViewPager.invalidate();
+        }
+    }
+
     private class NetworkResp implements NetworkConnectionUtility.NetworkResponseListener {
         @Override
         public void onResponse(String urlString, String networkResult) {
@@ -575,7 +621,6 @@ public class HomeMainActivity extends AppCompatActivity
                         getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
                                 albumValues, selection, null);
                     }
-                    //uploadImagesToServer();
 
                     Intent composeIntent = new Intent(getApplicationContext(), ComposeActivity.class);
                     composeIntent.putExtra("Type", 4);
@@ -608,31 +653,17 @@ public class HomeMainActivity extends AppCompatActivity
 
                     startActivity(composeIntent);
                 }
-
-                /*try {
-                    JSONObject multimediaResp = new JSONObject(networkResult);
-                    ContentValues multimediaValues = new ContentValues();
-
-                    String selection = "";
-                    multimediaValues.put("image_id", multimediaResp.getString("oid"));
-                    multimediaValues.put("status", 1);
-
-                    getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
-                            multimediaValues, selection, null);
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }*/
             } else if (urlString.startsWith(NetworkConstants.GET_MULTIMEDIA)) {
                 mCurrentImg++;
+                progress.setTitle("Downloading ... " + mCurrentImg + "/" + mDownloadImagesLength);
+
                 if (networkResult == null) {
                     if (mCurrentImg == mDownloadImagesLength) {
                         progress.dismiss();
+                        //updateFragments();
                     }
                     return;
                 }
-                /*progress.setTitle("Downloading ... " + mCurrentImg + "/" + mDownloadImagesLength);
-                progress.show();*/
                 try {
                     JSONObject imageJsonObj = new JSONObject(networkResult);
                     String imageName = imageJsonObj.getString("name");
@@ -657,6 +688,155 @@ public class HomeMainActivity extends AppCompatActivity
 
                 if (mCurrentImg == mDownloadImagesLength) {
                     progress.dismiss();
+                    //updateFragments();
+                }
+            } else if (urlString.startsWith(NetworkConstants.GET_UPDATE_MESSAGES)) {
+                if (networkResult == null) {
+                    progress.dismiss();
+                    return;
+                }
+
+                try {
+                    JSONObject userJsonObj = new JSONObject(networkResult);
+                    JSONArray messageArray = userJsonObj.getJSONArray("messages");
+                    int msgArrayLength = messageArray.length();
+                    if (msgArrayLength > 0) {
+                        ContentValues[] msgIdValues = new ContentValues[msgArrayLength];
+                        receivedMsgs = new String[msgArrayLength];
+                        for (int msgId = 0; msgId < msgArrayLength; msgId++) {
+                            JSONObject msgIdObj = messageArray.getJSONObject(msgId);
+                            msgIdValues[msgId] = new ContentValues();
+                            String messageId = msgIdObj.getJSONObject("_id").getString("$oid");
+                            msgIdValues[msgId].put("message_id", messageId);
+                            receivedMsgs[msgId] = messageId;
+                            msgIdValues[msgId].put("message_type", msgIdObj.getString("message_type"));
+                        }
+                        getContentResolver().bulkInsert(Uri.parse("content://com.education.schoolapp/server_message_ids"), msgIdValues);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                pendingMsgs = new SchoolDataUtility().getPendingMessages(getApplicationContext());
+                if (pendingMsgs != null) {
+                    mMessageFinalCount = mMessageArrayLength = pendingMsgs.length;
+                    if (mMessageArrayLength > 0) {
+                        for (int msg = 0; msg < mMessageArrayLength; msg++) {
+                            networkConn.getMessage(pendingMsgs[msg]);
+                        }
+                    } else {
+                        progress.dismiss();
+                    }
+                } else {
+                    progress.dismiss();
+                }
+            } else if (urlString.startsWith(NetworkConstants.GET_MESSAGE)) {
+                progress.setTitle("Fetching Data ... " + mCurrentMsg + "/" + mMessageFinalCount);
+                mMessageArrayLength--;
+                mCurrentMsg++;
+                if (networkResult == null) {
+                    Log.i("Network", "Get Message API");
+                    return;
+                }
+                try {
+                    JSONObject messageObj = new JSONObject(networkResult);
+                    String[] messageProjection = {"subject", "body", "sender_id", "start_date", "end_date", "message_type"};
+                    JSONUtility jsonUtility = new JSONUtility();
+                    jsonUtility.setColumsList(messageProjection);
+
+                    ContentValues msgValues = jsonUtility.fromJSON(messageObj);
+                    msgValues.put("message_id", messageObj.getJSONObject("_id").getString("$oid"));
+
+                    JSONArray membersArray = messageObj.getJSONArray("members");
+                    String[] memberIds = new String[membersArray.length()];
+                    String[] memberNames = new String[membersArray.length()];
+                    for (int i = 0; i < memberIds.length; i++) {
+                        memberIds[i] = membersArray.getJSONObject(i).getJSONObject("_id").getString("$oid");
+                        memberNames[i] = membersArray.getJSONObject(i).getString("member_name");
+                    }
+
+                    String memberIdString = Joiner.on(",").skipNulls().join(memberIds);
+                    msgValues.put("member_ids", memberIdString);
+                    msgValues.put("member_names", Joiner.on(",").skipNulls().join(memberNames));
+
+                    if (messageObj.getString("album_ids") != null && !messageObj.getString("album_ids").equalsIgnoreCase("null")) {
+                        JSONArray albumArray = messageObj.getJSONArray("album_ids");
+                        if (albumArray != null) {
+                            String[] albumIds = new String[albumArray.length()];
+                            for (int i = 0; i < albumIds.length; i++) {
+                                albumIds[i] = albumArray.getString(i);
+                                mAlbumIds.add(mAlbumIdx, albumArray.getString(i));
+                                mAlbumIdx++;
+                            }
+                            msgValues.put("album_ids", Joiner.on(",").skipNulls().join(albumIds));
+                        }
+                    }
+                    msgValues.put("sender_profile_image", Base64.decode(messageObj.getString("sender_profile_image"), 0));
+                    msgValues.put("sender_name", messageObj.getString("sender_name"));
+
+                    getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
+
+                    ContentValues msgIdUpdate = new ContentValues();
+                    String selection = " message_id like '" + messageObj.getJSONObject("_id").getString("$oid") + "'";
+                    msgIdUpdate.put("status", 1);
+
+                    getContentResolver().update(Uri.parse("content://com.education.schoolapp/server_message_ids"), msgIdUpdate, selection, null);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                if (mMessageArrayLength == 0) {
+                    if (mAlbumIds != null) {
+                        mMessageFinalCount = mMessageArrayLength = mAlbumIds.size();
+                        if (mMessageArrayLength > 0) {
+                            for (int msg = 0; msg < mMessageArrayLength; msg++) {
+                                networkConn.getAlbum(mAlbumIds.get(msg));
+                            }
+                        } else {
+                            progress.dismiss();
+                            //updateFragments();
+                        }
+                    } else {
+                        progress.dismiss();
+                        //updateFragments();
+                    }
+                }
+            } else if (urlString.startsWith(NetworkConstants.GET_ALBUM)) {
+                progress.setTitle("Fetching Album ... " + mCurrentMsg + "/" + mMessageFinalCount);
+                mMessageArrayLength--;
+                mCurrentMsg++;
+
+                if (networkResult == null || networkResult.equalsIgnoreCase("Bad Request")) {
+                    Log.i("Network", "Get Album API");
+                    return;
+                }
+                try {
+                    JSONObject albumObj = new JSONObject(networkResult);
+                    JSONArray albumArray = albumObj.getJSONArray("multimediums");
+                    if (albumArray != null) {
+                        int imageLength = albumArray.length();
+                        if (imageLength > 0) {
+                            ContentValues[] albumValues = new ContentValues[imageLength];
+                            ContentValues albumMsgUpdate = new ContentValues();
+                            String albumName = "";
+                            for (int albIdx = 0; albIdx < imageLength; albIdx++) {
+                                albumValues[albIdx] = new ContentValues();
+
+                                albumValues[albIdx].put("type", "Received");
+                                albumName = albumObj.getString("name");
+                                albumValues[albIdx].put("album_name", albumName);
+                                albumValues[albIdx].put("album_id", albumObj.getJSONObject("_id").getString("$oid"));
+                                albumValues[albIdx].put("image_id", albumArray.getJSONObject(albIdx).getJSONObject("_id").getString("$oid"));
+                            }
+                            getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES), albumValues);
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                if (mMessageArrayLength == 0) {
+                    progress.dismiss();
+                    downloadImagesFromServer();
                 }
             }
         }
@@ -684,6 +864,7 @@ public class HomeMainActivity extends AppCompatActivity
             output.flush();
             output.close();
 
+            //TODO - Check if the image is already saved in gallery & don't save again if exists.
             String url = MediaStore.Images.Media.insertImage(getContentResolver(), imgBitmap,
                     imageName, imageName);
         } catch (IllegalArgumentException e) {

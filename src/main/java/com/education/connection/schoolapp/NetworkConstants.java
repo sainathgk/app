@@ -42,7 +42,10 @@ public class NetworkConstants {
     public final static String GET_ALBUM = HOST_URL + "/getAlbum/";
 
     //http://<server id>/getMultimedia/<Multimedia_id>.json
-    public final static  String GET_MULTIMEDIA = HOST_URL + "/getMultimedia/";
+    public final static String GET_MULTIMEDIA = HOST_URL + "/getMultimedia/";
+
+    //http://<server_id>/getProfile.json?id=<member_id>
+    public final static String GET_UPDATE_MESSAGES = HOST_URL + "/getProfile.json?id=";
 
     //GET - http://<server_ip>/getAllNotifications?Class=LKG&id=758x584d6
     public final static String GET_ALL_NOTIFICATIONS = HOST_URL + "getAllNotifications?Class=";

@@ -89,6 +89,13 @@ public class NetworkConnectionUtility {
         }
     }
 
+    public void getUpdateMessages(String memberId) {
+        if (NetworkConstants.isServerON) {
+            Log.i(TAG, "Get Update Messages");
+            new AsyncNetwork().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "GET", NetworkConstants.GET_UPDATE_MESSAGES + memberId);
+        }
+    }
+
     public interface NetworkResponseListener {
         void onResponse(String urlString, String networkResult);
     }

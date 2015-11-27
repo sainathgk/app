@@ -270,11 +270,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     }
                 }
             } else if (urlString.startsWith(NetworkConstants.GET_MESSAGE)) {
+                progress.setTitle("Fetching Data ... " + mCurrentMsg + "/" + mMessageFinalCount);
+                mMessageArrayLength--;
+                mCurrentMsg++;
                 if (networkResult == null) {
                     Log.i("Network", "Get Message API");
+                    return;
                 }
                 try {
-                    progress.setTitle("Fetching Data ... " + mCurrentMsg + "/" + mMessageFinalCount);
                     JSONObject messageObj = new JSONObject(networkResult);
                     String[] messageProjection = {"subject", "body", "sender_id", "start_date", "end_date", "message_type"};
                     JSONUtility jsonUtility = new JSONUtility();
@@ -331,8 +334,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     msgIdUpdate.put("status", 1);
 
                     getContentResolver().update(Uri.parse("content://com.education.schoolapp/server_message_ids"), msgIdUpdate, selection, null);
-                    mMessageArrayLength--;
-                    mCurrentMsg++;
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -341,6 +342,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     if (mAlbumIds != null) {
                         mMessageFinalCount = mMessageArrayLength = mAlbumIds.size();
                         if (mMessageArrayLength > 0) {
+                            mCurrentMsg = 1;
                             for (int msg = 0; msg < mMessageArrayLength; msg++) {
                                 networkConn.getAlbum(mAlbumIds.get(msg));
                             }
@@ -365,10 +367,15 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     }*/
                 }
             } else if (urlString.startsWith(NetworkConstants.GET_ALBUM)) {
+
+                progress.setTitle("Fetching Album ... " + mCurrentMsg + "/" + mMessageFinalCount);
+                mMessageArrayLength--;
+                mCurrentMsg++;
+
                 if (networkResult == null || networkResult.equalsIgnoreCase("Bad Request")) {
                     Log.i("Network", "Get Album API");
+                    return;
                 }
-                progress.setTitle("Fetching Album ... " + mCurrentMsg + "/" + mMessageFinalCount);
                 try {
                     JSONObject albumObj = new JSONObject(networkResult);
                     JSONArray albumArray = albumObj.getJSONArray("multimediums");
@@ -400,8 +407,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     e.printStackTrace();
                 }
 
-                mMessageArrayLength--;
-                mCurrentMsg++;
                 if (mMessageArrayLength == 0) {
                     launhHomeActivity();
                 }
