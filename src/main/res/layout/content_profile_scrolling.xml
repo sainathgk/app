@@ -30,8 +30,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:alpha="0.7"
-                android:text="Name"
-                android:textSize="18dp" />
+                android:text="@string/profile_name"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/actual_name"
@@ -41,7 +41,7 @@
                 android:layout_marginTop="10dp"
                 android:alpha="0.9"
                 android:text="Rizwana"
-                android:textSize="24dp" />
+                android:textSize="24sp" />
         </RelativeLayout>
 
         <LinearLayout
@@ -64,8 +64,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:alpha="0.7"
-                    android:text="Class"
-                    android:textSize="18dp" />
+                    android:text="@string/profile_class"
+                    android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/actual_class"
@@ -74,7 +74,7 @@
                     android:layout_below="@id/class_text"
                     android:alpha="0.9"
                     android:text="Nursery"
-                    android:textSize="24dp" />
+                    android:textSize="24sp" />
             </RelativeLayout>
 
             <RelativeLayout
@@ -92,8 +92,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:alpha="0.7"
-                    android:text="Section"
-                    android:textSize="18dp" />
+                    android:text="@string/profile_section"
+                    android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/actual_section"
@@ -102,7 +102,7 @@
                     android:layout_below="@id/section_text"
                     android:alpha="0.9"
                     android:text="A"
-                    android:textSize="24dp" />
+                    android:textSize="24sp" />
             </RelativeLayout>
 
             <RelativeLayout
@@ -120,8 +120,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:alpha="0.7"
-                    android:text="Blood Group"
-                    android:textSize="18dp" />
+                    android:text="@string/profile_blood_group"
+                    android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/actual_blood_group"
@@ -130,7 +130,7 @@
                     android:layout_below="@id/blood_group_text"
                     android:alpha="0.9"
                     android:text="O+ve"
-                    android:textSize="24dp" />
+                    android:textSize="24sp" />
             </RelativeLayout>
         </LinearLayout>
 
@@ -148,8 +148,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:alpha="0.7"
-                android:text="Hobbies"
-                android:textSize="18dp" />
+                android:text="@string/profile_hobbies"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/actual_hobbies"
@@ -159,7 +159,7 @@
                 android:alpha="0.9"
                 android:maxLines="2"
                 android:text="Dancing, Playing with LEGO blocks"
-                android:textSize="24dp" />
+                android:textSize="24sp" />
         </RelativeLayout>
 
         <LinearLayout
@@ -182,8 +182,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:alpha="0.7"
-                    android:text="Father"
-                    android:textSize="18dp" />
+                    android:text="@string/profile_father"
+                    android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/actual_father_name"
@@ -192,7 +192,7 @@
                     android:layout_below="@id/father_text"
                     android:alpha="0.9"
                     android:text="Amir"
-                    android:textSize="24dp" />
+                    android:textSize="24sp" />
             </RelativeLayout>
 
             <RelativeLayout
@@ -211,8 +211,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:alpha="0.7"
-                    android:text="Mother"
-                    android:textSize="18dp" />
+                    android:text="@string/profile_mother"
+                    android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/actual_mother_name"
@@ -221,7 +221,7 @@
                     android:layout_below="@id/mother_text"
                     android:alpha="0.9"
                     android:text="Ruhina"
-                    android:textSize="24dp" />
+                    android:textSize="24sp" />
             </RelativeLayout>
         </LinearLayout>
 
@@ -245,8 +245,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:alpha="0.7"
-                    android:text="Guardian"
-                    android:textSize="18dp" />
+                    android:text="@string/profile_guardian"
+                    android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/actual_guardian_name"
@@ -255,7 +255,7 @@
                     android:layout_below="@id/guardian_text"
                     android:alpha="0.9"
                     android:text="Rehan"
-                    android:textSize="24dp" />
+                    android:textSize="24sp" />
             </RelativeLayout>
 
             <RelativeLayout
@@ -274,8 +274,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:alpha="0.7"
-                    android:text="Teacher"
-                    android:textSize="18dp" />
+                    android:text="@string/profile_teacher"
+                    android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/actual_teacher_name"
@@ -284,7 +284,7 @@
                     android:layout_below="@id/teacher_text"
                     android:alpha="0.9"
                     android:text="@string/teacher_name"
-                    android:textSize="24dp" />
+                    android:textSize="24sp" />
             </RelativeLayout>
         </LinearLayout>
     </LinearLayout>

@@ -16,7 +16,7 @@
             <RadioGroup
                 android:id="@+id/radio_compose"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:layout_margin="10dp"
                 android:layout_weight="2"
                 android:orientation="horizontal">
@@ -27,14 +27,14 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="2"
                     android:checked="true"
-                    android:text="Individual" />
+                    android:text="@string/compose_radio_individual" />
 
                 <RadioButton
                     android:id="@+id/broadcast_radioButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="2"
-                    android:text="Broadcast" />
+                    android:text="@string/compose_radio_broadcast" />
 
             </RadioGroup>
 
@@ -44,20 +44,12 @@
                 android:layout_margin="10dp"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_marginRight="5dp"
-                    android:layout_weight="1"
-                    android:text="To : "
-                    android:visibility="gone" />
-
                 <MultiAutoCompleteTextView
                     android:id="@+id/msg_to"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="3"
-                    android:hint="Enter Student Name"
+                    android:hint="@string/compose_to_student_name"
                     android:singleLine="true" />
 
             </LinearLayout>
@@ -69,7 +61,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_margin="10dp"
                 android:ems="10"
-                android:hint="Message Title"
+                android:hint="@string/compose_msg_title"
                 android:inputType="textMultiLine|textCapSentences" />
 
             <EditText
@@ -79,7 +71,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_margin="10dp"
                 android:ems="10"
-                android:hint="Message Description"
+                android:hint="@string/compose_msg_description"
                 android:inputType="textMultiLine|textCapSentences"
                 android:minLines="3" />
 
@@ -89,13 +81,13 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:orientation="horizontal"
-                android:visibility="gone">
+                android:visibility="visible">
 
                 <Button
                     android:id="@+id/date_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left"
+                    android:layout_gravity="start"
                     android:layout_margin="10dp"
                     android:layout_weight="1"
                     android:drawableLeft="@android:drawable/ic_menu_my_calendar"
@@ -106,7 +98,7 @@
                     android:id="@+id/time_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left"
+                    android:layout_gravity="start"
                     android:layout_margin="10dp"
                     android:layout_weight="1"
                     android:drawableLeft="@android:drawable/ic_menu_info_details"
@@ -114,8 +106,6 @@
                     android:text="Set Time" />
 
             </LinearLayout>
-
-
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

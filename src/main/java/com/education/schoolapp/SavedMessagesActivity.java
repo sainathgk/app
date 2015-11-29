@@ -59,7 +59,7 @@ public class SavedMessagesActivity extends AppCompatActivity {
         mLoginName = sharePrefs.getString(SHARED_LOGIN_NAME, "");
 
         if (mIsTeacher) {
-            setTitle("Outbox");
+            setTitle(R.string.saved_msgs_title_2);
         }
 
         // Create the adapter that will return a fragment for each of the three
@@ -152,18 +152,18 @@ public class SavedMessagesActivity extends AppCompatActivity {
             switch (position) {
                 case 0:
                     if (mIsTeacher) {
-                        return "Notifications";
+                        return getString(R.string.notifications_fragment_title);
                     } else {
-                        return "Saved";
+                        return getString(R.string.saved_msgs_saved_fragment);
                     }
                 case 1:
                     if (mIsTeacher) {
-                        return "Messages";
+                        return getString(R.string.message_fragment_title);
                     }  else {
-                        return "Outbox";
+                        return getString(R.string.saved_msgs_outbox_fragment);
                     }
             }
-            return null;
+            return "";
         }
     }
 }

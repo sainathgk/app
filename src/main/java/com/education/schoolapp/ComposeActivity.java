@@ -213,7 +213,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
         progress = new ProgressDialog(this);
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
-        progress.setTitle("Sending ...");
+        progress.setTitle(R.string.compose_send_progress);
     }
 
     @Override
@@ -337,88 +337,6 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        /*ContentValues msgValues = new ContentValues();
-        msgValues.put("subject", textTitle);
-        msgValues.put("body", textDesc);
-        msgValues.put("type", mType);
-        msgValues.put("sender_id", mLoginName);
-        msgValues.put("sender_profile_image", new SchoolDataUtility().getMemberProfilePic(this, mLoginName));
-        msgValues.put("start_date", c.getTimeInMillis());
-        msgValues.put("end_date", c.getTimeInMillis() + 10000);
-        msgValues.put("member_ids", String.valueOf(toStringArray));
-
-        msgValues.put("msg_id", randInt());
-        msgValues.put("to_name", textTo);
-        if (mIsTeacher) {
-            msgValues.put("from_name", getResources().getString(R.string.teacher_name));
-            Bitmap proBitmap = null;
-            if (((BitmapDrawable) getResources().getDrawable(R.drawable.teacher_)) != null) {
-                proBitmap = ((BitmapDrawable) getResources().getDrawable(R.drawable.teacher_)).getBitmap();
-            }
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            proBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
-            msgValues.put("from_image", outputStream.toByteArray());
-        } else {
-            msgValues.put("from_name", mLoginName);
-            //TODO: Put the blob content as well.
-            if (mLoginName.equalsIgnoreCase("abc")) {
-                Bitmap proBitmap = null;
-                if (((BitmapDrawable) getResources().getDrawable(R.drawable.student)) != null) {
-                    proBitmap = ((BitmapDrawable) getResources().getDrawable(R.drawable.student)).getBitmap();
-                }
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                proBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
-                msgValues.put("from_image", outputStream.toByteArray());
-            } else {
-                Bitmap proBitmap = null;
-                if (((BitmapDrawable) getResources().getDrawable(R.drawable.student)) != null) {
-                    proBitmap = ((BitmapDrawable) getResources().getDrawable(R.drawable.student)).getBitmap();
-                }
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                proBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
-                msgValues.put("from_image", outputStream.toByteArray());
-            }
-        }
-
-        if (mType == 1) {
-            c.set(mSelectedYear, mSelectedMonth, mSelectedDay, mSelectedHour, mSelectedMinute);
-            msgValues.put("noti_title", textTitle);
-            msgValues.put("noti_description", textDesc);
-            msgValues.put("noti_date", c.getTimeInMillis());
-
-            getContentResolver().insert(Uri.parse("content://com.education.schoolapp/sent_notifications"), msgValues);
-
-            getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_notifications"), msgValues);
-
-            Notification.Builder builder = new Notification.Builder(this);
-            builder.setContentTitle(textTitle);
-            builder.setContentText(textDesc);
-            builder.setSmallIcon(R.drawable.school_logo);
-            Notification notification = builder.build();
-
-            notification.defaults |= Notification.DEFAULT_ALL;
-
-            Intent notificationIntent = new Intent(this.getApplicationContext(), NotificationReceiver.class);
-            notificationIntent.putExtra(NotificationReceiver.NOTIFICATION_ID, 1);
-            notificationIntent.putExtra(NotificationReceiver.NOTIFICATION, notification);
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(this.getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            alarmManager.set(AlarmManager.RTC_WAKEUP, c.getTimeInMillis(), pendingIntent);
-
-            Toast.makeText(getApplicationContext(), "Notification has been sent Successfully", Toast.LENGTH_SHORT).show();
-        } else {
-            msgValues.put("msg_title", textTitle);
-            msgValues.put("msg_description", textDesc);
-            msgValues.put("msg_date", System.currentTimeMillis());
-
-            getContentResolver().insert(Uri.parse("content://com.education.schoolapp/sent_messages"), msgValues);
-
-            getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages"), msgValues);
-            Toast.makeText(getApplicationContext(), "Message has been sent Successfully", Toast.LENGTH_SHORT).show();
-        }
-        finish();*/
     }
 
     private class NetworkResp implements NetworkConnectionUtility.NetworkResponseListener {

@@ -35,7 +35,8 @@
                 android:id="@+id/actual_profile_image"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:src="@drawable/ic_person_black_36dp" />
+                android:src="@drawable/ic_person_black_36dp"
+                android:contentDescription="@string/profile_view_title" />
         </android.support.design.widget.CollapsingToolbarLayout>
     </android.support.design.widget.AppBarLayout>
 

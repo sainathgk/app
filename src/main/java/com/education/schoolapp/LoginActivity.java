@@ -128,7 +128,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         progress = new ProgressDialog(this);
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
-        progress.setTitle("Authenticating ...");
+        progress.setTitle(R.string.login_authenticating);
 
         networkConn = new NetworkConnectionUtility();
 
@@ -141,7 +141,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         public void onResponse(String urlString, String networkResult) {
             if (urlString.equalsIgnoreCase(NetworkConstants.AUTHENTICATE)) {
                 if (networkResult == null) {
-                    progress.setTitle("Failed");
+                    progress.setTitle(R.string.login_failed);
                     progress.dismiss();
                     return;
                 }
@@ -270,7 +270,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     }
                 }
             } else if (urlString.startsWith(NetworkConstants.GET_MESSAGE)) {
-                progress.setTitle("Fetching Data ... " + mCurrentMsg + "/" + mMessageFinalCount);
+                progress.setTitle(getString(R.string.message_fetching_data) + mCurrentMsg + "/" + mMessageFinalCount);
                 mMessageArrayLength--;
                 mCurrentMsg++;
                 if (networkResult == null) {
@@ -368,7 +368,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 }
             } else if (urlString.startsWith(NetworkConstants.GET_ALBUM)) {
 
-                progress.setTitle("Fetching Album ... " + mCurrentMsg + "/" + mMessageFinalCount);
+                progress.setTitle(getString(R.string.album_fetching_data) + mCurrentMsg + "/" + mMessageFinalCount);
                 mMessageArrayLength--;
                 mCurrentMsg++;
 
@@ -442,7 +442,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             return;
         }
 
-        progress.setTitle("Authenticating ...");
+        progress.setTitle(R.string.login_authenticating);
         progress.show();
 
         int mSelectedRadioId = mRadioLayout.getCheckedRadioButtonId();

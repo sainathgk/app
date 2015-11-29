@@ -44,7 +44,7 @@ public class MessageViewActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTitle("Message View");
+        setTitle(R.string.message_view_title);
         /*getActionBar().setHomeButtonEnabled(true);
         getActionBar().setIcon(R.drawable.school_logo);*/
         setContentView(R.layout.activity_message_view);
@@ -138,7 +138,7 @@ public class MessageViewActivity extends AppCompatActivity {
                 msgUpdate.put("saved", 1);
 
                 getContentResolver().update(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgUpdate, selection, null);
-                Toast.makeText(this, "Message is saved", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.message_saved, Toast.LENGTH_SHORT).show();
                 break;
 
             case R.id.action_reply:

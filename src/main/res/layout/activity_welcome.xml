@@ -10,7 +10,7 @@
         android:layout_height="match_parent" android:keepScreenOn="true" android:textColor="#4C5111"
         android:textStyle="bold" android:textSize="50sp" android:gravity="center"
         android:visibility="gone"
-        android:text="Welcome to \n New Al Wurood International \n School" />
+        android:text="@string/welcome_string_name" />
 
     <ImageView
         android:layout_width="wrap_content"

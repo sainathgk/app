@@ -8,31 +8,31 @@
         android:id="@+id/action_save"
         android:icon="@android:drawable/ic_menu_save"
         android:orderInCategory="100"
-        android:title="Save"
+        android:title="@string/action_save"
         android:visible="true"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/action_calendar"
         android:icon="@android:drawable/ic_menu_my_calendar"
         android:orderInCategory="101"
-        android:title="Add to Calendar"
+        android:title="@string/action_calendar_event"
         android:visible="false"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/action_reply"
         android:icon="@android:drawable/ic_menu_revert"
         android:orderInCategory="102"
-        android:title="Reply"
+        android:title="@string/action_reply"
         android:visible="true"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/action_reply_all"
         android:icon="@android:drawable/ic_menu_revert"
         android:orderInCategory="103"
-        android:title="Reply All"
+        android:title="@string/action_reply_all"
         android:visible="true"
         app:showAsAction="never" />
 
@@ -40,7 +40,7 @@
         android:id="@+id/action_delete"
         android:icon="@android:drawable/ic_menu_delete"
         android:orderInCategory="104"
-        android:title="Delete"
+        android:title="@string/action_delete"
         android:visible="true"
         app:showAsAction="never" />
 

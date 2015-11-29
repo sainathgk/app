@@ -27,7 +27,7 @@
         <activity
             android:name=".HomeMainActivity"
             android:icon="@drawable/school_logo"
-            android:label="@string/app_name"
+            android:label="@string/title_activity_welcome"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
@@ -44,7 +44,7 @@
 
         <activity
             android:name=".SavedMessagesActivity"
-            android:label="@string/title_activity_saved_messages"
+            android:label="@string/saved_msgs_title_1"
             android:parentActivityName=".HomeMainActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
@@ -76,9 +76,9 @@
         </activity>
         <activity
             android:name=".ComposeActivity"
-            android:label="Compose" />
+            android:label="@string/compose_title" />
 
-        <activity android:name=".MessageViewActivity"></activity>
+        <activity android:name=".MessageViewActivity"/>
 
         <activity android:name=".CustomGalleryActivity">
             <intent-filter>

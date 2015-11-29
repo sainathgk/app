@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -42,6 +43,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.MultiAutoCompleteTextView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.education.connection.schoolapp.JSONUtility;
 import com.education.connection.schoolapp.NetworkConnectionUtility;
@@ -65,6 +67,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
@@ -191,7 +194,7 @@ public class HomeMainActivity extends AppCompatActivity
             byte[] profilePic = schoolData.getMemberProfilePic(this);
 
             mNavLoginName.setText(studentDetails[0]);
-            mNavClassName.setText("Class : " + studentDetails[1]);
+            mNavClassName.setText(getString(R.string.nav_drawer_class) + studentDetails[1]);
             mNavProfileImage.setImageBitmap(BitmapFactory.decodeByteArray(profilePic, 0, profilePic.length));
         }
 
@@ -251,6 +254,9 @@ public class HomeMainActivity extends AppCompatActivity
         });
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+        if (Locale.getDefault().getLanguage().equalsIgnoreCase("ar")) {
+            tabLayout.setTabMode(TabLayout.MODE_FIXED);
+        }
         tabLayout.setupWithViewPager(mViewPager);
 
         mToView = new MultiAutoCompleteTextView(this);
@@ -322,6 +328,14 @@ public class HomeMainActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        String newLang = newConfig.locale.getDisplayLanguage();
+        Toast.makeText(getApplicationContext(), "Selected Language is : " + newLang, Toast.LENGTH_SHORT).show();
+        Log.i("Language", "Current Language is " + newLang);
     }
 
     private String getFragmentTag(int pos) {
@@ -434,7 +448,7 @@ public class HomeMainActivity extends AppCompatActivity
             //downloadImagesFromServer();
             return true;
         } else if (id == R.id.menu_refresh) {
-            progress.setTitle("Refreshing ...");
+            progress.setTitle(R.string.messages_refreshing);
             progress.show();
 
             networkConn.getUpdateMessages(mLoginName);
@@ -463,7 +477,7 @@ public class HomeMainActivity extends AppCompatActivity
         } else if (id == R.id.nav_sign_out) {
             SharedPreferences.Editor editor = sharePrefs.edit();
             editor.putBoolean(SHARED_LOGIN_KEY, false);
-            editor.commit();
+            editor.apply();
 
             getContentResolver().delete(Uri.parse("content://com.education.schoolapp/identity"), null, null);
 
@@ -479,39 +493,19 @@ public class HomeMainActivity extends AppCompatActivity
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         final AlertDialog alertDialog = builder.create();
 
-        builder.setTitle("Enter Album Name");
+        builder.setTitle(R.string.album_title_dialog_title);
 
         final EditText mAlbumEdit = new EditText(this);
         mAlbumEdit.setInputType(InputType.TYPE_CLASS_TEXT);
 
         builder.setView(mAlbumEdit);
-        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 mAlbumName = mAlbumEdit.getText().toString();
                 if (mAlbumName != null && !mAlbumName.isEmpty()) {
                     dialog.cancel();
                     alertDialog.dismiss();
-                    createAlbumInServer(mAlbumName);
-                    //buildMembersDialog();
-                }
-            }
-        });
-
-        builder.show();
-    }
-
-    private void buildMembersDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        builder.setTitle("Select Members to Upload");
-        builder.setView(mToView);
-        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                mToNames = mToView.getText().toString();
-                if (mToNames != null && !mToNames.isEmpty()) {
-                    dialog.dismiss();
                     createAlbumInServer(mAlbumName);
                 }
             }
@@ -533,7 +527,7 @@ public class HomeMainActivity extends AppCompatActivity
     private void createAlbumInServer(String albumName) {
         JSONObject albumJsonObj = new JSONObject();
         JSONObject albumObj = new JSONObject();
-        progress.setTitle("Uploading ... ");
+        progress.setTitle(R.string.album_upload_progress);
         progress.show();
         try {
             albumJsonObj.put("name", albumName);
@@ -572,7 +566,7 @@ public class HomeMainActivity extends AppCompatActivity
             try {
                 String imageId = imagesIdArray.getString(i);
                 Log.i("Network", "Download Image ID is " + imageId);
-                progress.setTitle("Downloading ...");
+                progress.setTitle(R.string.multimedia_download_progress);
                 progress.show();
                 networkConn.getMultimedia(imageId);
             } catch (JSONException e) {
@@ -637,7 +631,7 @@ public class HomeMainActivity extends AppCompatActivity
                 if (networkResult == null) {
                     return;
                 }
-                progress.setTitle("Uploading ... " + mCurrentImg + "/" + mImageFinalCount);
+                progress.setTitle(getString(R.string.album_upload_progress) + mCurrentImg + "/" + mImageFinalCount);
 
                 if (mCurrentImg == mImageFinalCount) {
                     ContentValues multimediaValues = new ContentValues();
@@ -655,7 +649,7 @@ public class HomeMainActivity extends AppCompatActivity
                 }
             } else if (urlString.startsWith(NetworkConstants.GET_MULTIMEDIA)) {
                 mCurrentImg++;
-                progress.setTitle("Downloading ... " + mCurrentImg + "/" + mDownloadImagesLength);
+                progress.setTitle(getString(R.string.multimedia_download_progress) + mCurrentImg + "/" + mDownloadImagesLength);
 
                 if (networkResult == null) {
                     if (mCurrentImg == mDownloadImagesLength) {
@@ -731,7 +725,7 @@ public class HomeMainActivity extends AppCompatActivity
                     progress.dismiss();
                 }
             } else if (urlString.startsWith(NetworkConstants.GET_MESSAGE)) {
-                progress.setTitle("Fetching Data ... " + mCurrentMsg + "/" + mMessageFinalCount);
+                progress.setTitle(getString(R.string.message_fetching_data) + mCurrentMsg + "/" + mMessageFinalCount);
                 mMessageArrayLength--;
                 mCurrentMsg++;
                 if (networkResult == null) {
@@ -793,15 +787,13 @@ public class HomeMainActivity extends AppCompatActivity
                             }
                         } else {
                             progress.dismiss();
-                            //updateFragments();
                         }
                     } else {
                         progress.dismiss();
-                        //updateFragments();
                     }
                 }
             } else if (urlString.startsWith(NetworkConstants.GET_ALBUM)) {
-                progress.setTitle("Fetching Album ... " + mCurrentMsg + "/" + mMessageFinalCount);
+                progress.setTitle(getString(R.string.album_fetching_data) + mCurrentMsg + "/" + mMessageFinalCount);
                 mMessageArrayLength--;
                 mCurrentMsg++;
 
@@ -915,36 +907,33 @@ public class HomeMainActivity extends AppCompatActivity
         public CharSequence getPageTitle(int position) {
             switch (position) {
                 case 0:
-                    return "Messages";
+                    return getString(R.string.message_fragment_title);
                 case 1:
-                    return "Notifications";
+                    return getString(R.string.notifications_fragment_title);
                 case 2:
-                    return "Albums";
+                    return getString(R.string.album_fragment_title);
             }
             return null;
         }
     }
 
     private void selectImage() {
-        final CharSequence[] items = {"Take Photo", "Choose from Library",
-                "Cancel"};
+        final CharSequence[] items = {getString(R.string.popup_take_photos), getString(R.string.popup_choose_gallery)};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Add Photo!");
+        builder.setTitle(R.string.popup_title);
         builder.setItems(items, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int item) {
-                if (items[item].equals("Take Photo")) {
+                if (items[item].equals(getString(R.string.popup_take_photos))) {
                     Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     startActivityForResult(intent, REQUEST_CAMERA);
-                } else if (items[item].equals("Choose from Library")) {
+                } else if (items[item].equals(getString(R.string.popup_choose_gallery))) {
                     Intent intent = new Intent(
                             Action.ACTION_MULTIPLE_PICK);
                     intent.setClass(getApplicationContext(), CustomGalleryActivity.class);
                     startActivityForResult(intent,
                             SELECT_FILE);
-                } else if (items[item].equals("Cancel")) {
-                    dialog.dismiss();
                 }
             }
         });
@@ -996,30 +985,5 @@ public class HomeMainActivity extends AppCompatActivity
 
     private void onSelectFromGalleryResult(Intent data) {
         createAlbumInServer(randomString(6));
-    }/*{
-        Uri selectedImageUri = data.getData();
-        String[] projection = {MediaStore.MediaColumns.DATA};
-        Cursor cursor = managedQuery(selectedImageUri, projection, null, null,
-                null);
-        int column_index = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
-        .moveToFirst();
-
-        String selectedImagePath = cursor.getString(column_index);
-
-        Bitmap bm;
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(selectedImagePath, options);
-        final int REQUIRED_SIZE = 200;
-        int scale = 1;
-        while (options.outWidth / scale / 2 >= REQUIRED_SIZE
-                && options.outHeight / scale / 2 >= REQUIRED_SIZE)
-            scale *= 2;
-        options.inSampleSize = scale;
-        options.inJustDecodeBounds = false;
-        bm = BitmapFactory.decodeFile(selectedImagePath, options);
-
-        //TODO. set the image to Album Grid view
-        //ivImage.setImageBitmap(bm);
-    }*/
+    }
 }

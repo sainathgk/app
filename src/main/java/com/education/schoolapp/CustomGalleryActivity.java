@@ -46,7 +46,7 @@ public class CustomGalleryActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTitle("Select Photos");
+        setTitle(R.string.gallery_title);
         setContentView(R.layout.gallery);
 
         action = getIntent().getAction();
