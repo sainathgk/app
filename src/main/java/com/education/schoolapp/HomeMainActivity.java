@@ -135,6 +135,7 @@ public class HomeMainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setLogo(R.drawable.home_logo);
         setSupportActionBar(toolbar);
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -471,7 +472,8 @@ public class HomeMainActivity extends AppCompatActivity
             Intent profileIntent = new Intent(this, SavedMessagesActivity.class);
             startActivity(profileIntent);
         } else if (id == R.id.nav_downloads) {
-
+            /*Snackbar.make(, "Replace with your own action", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();*/
         } else if (id == R.id.nav_manage) {
 
         } else if (id == R.id.nav_sign_out) {

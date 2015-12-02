@@ -16,6 +16,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:src="@drawable/school_background"/>
+        android:src="@drawable/home_logo"/>
 
 </FrameLayout>

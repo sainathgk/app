@@ -143,9 +143,9 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessagesListAdapte
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
 
-        holder.mMsgTitle.setText(msgData.get(position).msgTitle);
+        holder.mMsgTitle.setText(msgData.get(position).msgFrom);
         holder.mMsgItemView.setTag(msgData.get(position).msgId);
-        holder.mMsgDescription.setText(msgData.get(position).msgDescription);
+        holder.mMsgDescription.setText(msgData.get(position).msgTitle);
         holder.mMsgTimeStamp.setText(msgData.get(position).msgDate);
         if (msgData.get(position).msgReadStatus == 1) {
             holder.mMsgTitle.setTypeface(null, Typeface.BOLD);

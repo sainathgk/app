@@ -12,7 +12,7 @@
     <android.support.v7.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
         android:id="@+id/card_view"
         android:layout_width="match_parent"
-        android:layout_height="92dp"
+        android:layout_height="62dp"
         android:layout_gravity="center"
         card_view:cardCornerRadius="4dp">
 
@@ -25,7 +25,7 @@
                 android:id="@+id/sender_profile"
                 android:layout_width="60dp"
                 android:layout_height="match_parent"
-                android:layout_marginLeft="20dp"
+                android:layout_marginLeft="10dp"
                 android:orientation="horizontal">
 
                 <ImageView
@@ -53,9 +53,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_alignParentTop="true"
-                android:layout_marginLeft="20dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginTop="4dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
                 android:layout_toEndOf="@+id/sender_profile"
                 android:layout_toRightOf="@+id/sender_profile"
                 android:orientation="vertical">
@@ -68,37 +68,41 @@
                     android:singleLine="true"
                     android:text="Sainath G K"
                     android:textAppearance="?android:attr/textAppearanceLarge"
-                    android:textSize="16dp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/msg_description"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
-                    android:ellipsize="end"
-                    android:maxLines="2"
-                    android:minLines="2"
-                    android:text="Medium Text  asjdfhkj"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:textSize="14dp"
-                    android:textStyle="bold" />
+                    android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/msg_time"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_marginRight="20dp"
-                    android:layout_marginTop="5dp"
-                    android:paddingBottom="2dp"
-                    android:singleLine="true"
-                    android:text="Time &amp; Date"
-                    android:textAlignment="viewEnd"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:textSize="12dp" />
+                    <TextView
+                        android:id="@+id/msg_description"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:text="Medium Text  asjdfhkj fhtg ghghj dfghgt dfg tfgj"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/msg_time"
+                        android:layout_width="60dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginRight="5dp"
+                        android:singleLine="true"
+                        android:text="30-Nov"
+                        android:textAlignment="viewEnd"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textSize="14sp" />
+                </LinearLayout>
             </LinearLayout>
-
         </RelativeLayout>
 
         <ImageView

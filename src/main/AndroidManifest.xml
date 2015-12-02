@@ -26,8 +26,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".HomeMainActivity"
-            android:icon="@drawable/school_logo"
-            android:label="@string/title_activity_welcome"
+            android:icon="@drawable/logo"
+            android:label=" "
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity

@@ -46,6 +46,11 @@
     <string name="action_downloads">Downloads</string>
     <string name="action_sign_out">Sign Out</string>
     <string name="action_refresh">Refresh</string>
+    <string name="action_calendar">Academic Calendar</string>
+    <string name="action_contacts">Important Contacts</string>
+    <string name="action_address">Address</string>
+    <string name="action_website">Website</string>
+    <string name="action_facebook">Facebook</string>
 
     <!--Login Activity Strings-->
     <string name="title_activity_login">Login</string>
