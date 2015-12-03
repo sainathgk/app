@@ -149,7 +149,7 @@ public class GcmService extends GcmListenerService {
 
                     Notification noti = mNotiBuilder.setContentTitle(msgValues.getAsString("subject"))
                             .setContentText(msgValues.getAsString("body"))
-                            .setSmallIcon(R.drawable.school_logo)
+                            .setSmallIcon(R.drawable.ic_school_black_36dp)
                             .setContentIntent(contentIntent)
                             .setAutoCancel(true)
                             .build();

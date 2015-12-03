@@ -1,9 +1,9 @@
 <resources>
-    <string name="app_name" translatable="false">Al Wurood School</string>
+    <string name="app_name" translatable="false">My School</string>
 
     <string name="hello_blank_fragment" translatable="false">Hello blank fragment</string>
 
-    <string name="title_activity_welcome">Al Wurood School</string>
+    <string name="title_activity_welcome">My School</string>
 
     <string name="gcm_defaultSenderId" translatable="false">158361423322</string>
 
@@ -59,7 +59,7 @@
     <string name="login_username">Username</string>
     <string name="login_password">Password</string>
     <string name="login_button_text">Login</string>
-    <string name="welcome_string_name" translatable="false">Welcome to \n New Al Wurood International \n School</string>
+    <string name="welcome_string_name" translatable="false">Welcome to My School</string>
 
     <!--Message Detail View Strings-->
     <string name="message_view_title">Message View</string>

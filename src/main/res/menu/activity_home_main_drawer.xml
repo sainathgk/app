@@ -9,22 +9,24 @@
         <item
             android:id="@+id/nav_saved_messages"
             android:icon="@android:drawable/ic_menu_save"
+            android:visible="false"
             android:title="@string/saved_msgs_title_1" />
         <item
             android:id="@+id/nav_downloads"
             android:icon="@android:drawable/ic_menu_slideshow"
+            android:visible="false"
             android:title="@string/action_downloads" />
         <item
             android:id="@+id/nav_calendar"
-            android:icon="@android:drawable/ic_menu_my_calendar"
+            android:icon="@drawable/ic_event_available_black_24dp"
             android:title="@string/action_calendar" />
         <item
             android:id="@+id/nav_contacts"
-            android:icon="@android:drawable/sym_contact_card"
+            android:icon="@drawable/ic_people_black_24dp"
             android:title="@string/action_contacts" />
         <item
             android:id="@+id/nav_address"
-            android:icon="@android:drawable/ic_menu_mapmode"
+            android:icon="@drawable/ic_place_black_24dp"
             android:title="@string/action_address" />
     </group>
 
@@ -32,11 +34,11 @@
         <menu>
             <item
                 android:id="@+id/nav_website"
-                android:icon="@android:drawable/ic_dialog_email"
+                android:icon="@drawable/ic_public_black_24dp"
                 android:title="@string/action_website" />
             <item
                 android:id="@+id/nav_facebook"
-                android:icon="@android:drawable/sym_call_outgoing"
+                android:icon="@drawable/com_facebook_button_icon"
                 android:title="@string/action_facebook" />
         </menu>
     </item>

@@ -186,8 +186,8 @@ public class HomeMainActivity extends AppCompatActivity
                 //Action button should be enable for all the fragments.
                 fab.setVisibility(View.VISIBLE);
                 //Hide the Student profile item from Navigation drawer.
-                navigationView.getMenu().findItem(R.id.nav_student_profile).setVisible(false);
-                navigationView.getMenu().findItem(R.id.nav_saved_messages).setTitle("Outbox Messages");
+                /*navigationView.getMenu().findItem(R.id.nav_student_profile).setVisible(false);
+                navigationView.getMenu().findItem(R.id.nav_saved_messages).setTitle("Outbox Messages");*/
             }
             SchoolDataUtility schoolData = new SchoolDataUtility(mLoginName, false);
 
@@ -286,7 +286,7 @@ public class HomeMainActivity extends AppCompatActivity
         progress = new ProgressDialog(this);
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
-        progress.setTitle("Uploading ...");
+        progress.setTitle(R.string.album_upload_progress);
         progress.setOnCancelListener(new DialogInterface.OnCancelListener() {
             @Override
             public void onCancel(DialogInterface dialog) {
@@ -381,7 +381,7 @@ public class HomeMainActivity extends AppCompatActivity
     }
 
     public static String getDateString(Long timeMilliSeconds) {
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM");
 
         Calendar calendar = Calendar.getInstance();
         try {
@@ -475,7 +475,7 @@ public class HomeMainActivity extends AppCompatActivity
             /*Snackbar.make(, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();*/
         } else if (id == R.id.nav_manage) {
-
+            Toast.makeText(this, "App Settings will be launched", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_sign_out) {
             SharedPreferences.Editor editor = sharePrefs.edit();
             editor.putBoolean(SHARED_LOGIN_KEY, false);
@@ -484,6 +484,16 @@ public class HomeMainActivity extends AppCompatActivity
             getContentResolver().delete(Uri.parse("content://com.education.schoolapp/identity"), null, null);
 
             finish();
+        } else if (id == R.id.nav_calendar) {
+            Toast.makeText(this, "Academic Calendar will be shown here", Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.nav_address) {
+            Toast.makeText(this, "School Address will be shown here", Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.nav_contacts) {
+            Toast.makeText(this, "Important Contacts will be shown here", Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.nav_facebook) {
+            Toast.makeText(this, "School's Facebook page will be launched", Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.nav_website) {
+            Toast.makeText(this, "School's Website will be launched", Toast.LENGTH_SHORT).show();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

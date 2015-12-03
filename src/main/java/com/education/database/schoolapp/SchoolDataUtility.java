@@ -35,7 +35,7 @@ public class SchoolDataUtility {
     }
 
     public ArrayList<MessageItem> getAllMessages(Context context) {
-        String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id",
+        String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id", "sender_name",
                 "sender_profile_image", "read_status"};
         ArrayList<MessageItem> msgArray = null;
         Cursor msgCursor = null;
@@ -64,7 +64,7 @@ public class SchoolDataUtility {
             while (msgCursor.moveToNext()) {
                 MessageItem msgItem = new MessageItem();
                 msgItem.msgId = msgCursor.getString(msgCursor.getColumnIndex("message_id"));
-                msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_id"));
+                msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_name"));
                 msgItem.msgTo = msgCursor.getString(msgCursor.getColumnIndex("member_ids"));
                 msgItem.msgTitle = msgCursor.getString(msgCursor.getColumnIndex("subject"));
                 msgItem.msgDescription = msgCursor.getString(msgCursor.getColumnIndex("body"));
@@ -84,7 +84,7 @@ public class SchoolDataUtility {
     }
 
     public ArrayList<MessageItem> getSavedMessages(Context context) {
-        String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id",
+        String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id", "sender_name",
                 "sender_profile_image", "read_status"};
         ArrayList<MessageItem> msgArray = null;
         Cursor msgCursor = null;
@@ -98,7 +98,7 @@ public class SchoolDataUtility {
             while (msgCursor.moveToNext()) {
                 MessageItem msgItem = new MessageItem();
                 msgItem.msgId = msgCursor.getString(msgCursor.getColumnIndex("message_id"));
-                msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_id"));
+                msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_name"));
                 msgItem.msgTo = msgCursor.getString(msgCursor.getColumnIndex("member_ids"));
                 msgItem.msgTitle = msgCursor.getString(msgCursor.getColumnIndex("subject"));
                 msgItem.msgDescription = msgCursor.getString(msgCursor.getColumnIndex("body"));
@@ -155,7 +155,7 @@ public class SchoolDataUtility {
     }*/
 
     public ArrayList<MessageItem> getOutboxMessages(Context context) {
-        String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id", "sender_profile_image"};
+        String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id", "sender_name", "sender_profile_image"};
         ArrayList<MessageItem> msgArray = null;
         Cursor msgCursor = null;
         String selection = " sender_id like '" + mLoginName + "' and message_type = 1";
@@ -169,7 +169,7 @@ public class SchoolDataUtility {
                 MessageItem msgItem = new MessageItem();
                 msgItem.msgId = msgCursor.getString(msgCursor.getColumnIndex("message_id"));
                 msgItem.msgTo = msgCursor.getString(msgCursor.getColumnIndex("member_ids"));
-                msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_id"));
+                msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_name"));
                 msgItem.msgTitle = msgCursor.getString(msgCursor.getColumnIndex("subject"));
                 msgItem.msgDescription = msgCursor.getString(msgCursor.getColumnIndex("body"));
                 msgItem.msgDate = msgCursor.getString(msgCursor.getColumnIndex("start_date"));
@@ -186,7 +186,7 @@ public class SchoolDataUtility {
     }
 
     public ArrayList<MessageItem> getAllNotifications(Context context) {
-        String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id",
+        String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id", "sender_name",
                 "sender_profile_image", "read_status"};
         ArrayList<MessageItem> msgArray = null;
         Cursor msgCursor = null;
@@ -200,7 +200,7 @@ public class SchoolDataUtility {
             while (msgCursor.moveToNext()) {
                 MessageItem msgItem = new MessageItem();
                 msgItem.msgId = msgCursor.getString(msgCursor.getColumnIndex("message_id"));
-                msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_id"));
+                msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_name"));
                 msgItem.msgTo = msgCursor.getString(msgCursor.getColumnIndex("member_ids"));
                 msgItem.msgTitle = msgCursor.getString(msgCursor.getColumnIndex("subject"));
                 msgItem.msgDescription = msgCursor.getString(msgCursor.getColumnIndex("body"));
@@ -251,7 +251,7 @@ public class SchoolDataUtility {
 
     public ArrayList<MessageItem> getSentNotifications(Context context) {
         /*String[] messageProjection = {"msg_id", "to_name", "noti_title", "noti_description", "noti_date", "from_image", "from_name"};*/
-        String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id", "sender_profile_image"};
+        String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id", "sender_name", "sender_profile_image"};
         ArrayList<MessageItem> msgArray = null;
         Cursor msgCursor = null;
         String selection = " sender_id like '" + mLoginName + "' and message_type = 2";
@@ -265,7 +265,7 @@ public class SchoolDataUtility {
                 MessageItem msgItem = new MessageItem();
                 msgItem.msgId = msgCursor.getString(msgCursor.getColumnIndex("message_id"));
                 msgItem.msgTo = msgCursor.getString(msgCursor.getColumnIndex("member_ids"));
-                msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_id"));
+                msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_name"));
                 msgItem.msgTitle = msgCursor.getString(msgCursor.getColumnIndex("subject"));
                 msgItem.msgDescription = msgCursor.getString(msgCursor.getColumnIndex("body"));
                 msgItem.msgDate = msgCursor.getString(msgCursor.getColumnIndex("start_date"));

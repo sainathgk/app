@@ -331,7 +331,6 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
             msgValues.put("sender_profile_image", new SchoolDataUtility(mLoginName, true).getMemberProfilePic(this));
             msgValues.put("local_msg_id", mComposeMessageId);
             msgValues.put("member_names", textTo);
-            msgValues.put("sender_name", new SchoolDataUtility(mLoginName, true).getStudentName(this)[0]);
 
             getContentResolver().insert(Uri.parse("content://com.education.schoolapp/sent_messages_all"), msgValues);
         } catch (JSONException e) {
