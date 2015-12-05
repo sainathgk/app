@@ -71,6 +71,7 @@ public class ProfileScrollingActivity extends AppCompatActivity {
         sharePrefs = getApplicationContext().getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
 
         mLoginName = sharePrefs.getString(SHARED_LOGIN_NAME, "");
+        String isTeacher = sharePrefs.getString(SHARED_LOGIN_TYPE, "");
         if (!mLoginName.isEmpty()) {
             mProfileDetails = new SchoolDataUtility(mLoginName, false).getStudentProfileDetails(this);
 
@@ -86,8 +87,7 @@ public class ProfileScrollingActivity extends AppCompatActivity {
                 mProfileImageView.setImageBitmap(mProfileDetails.studentImage);
             }
 
-            String isTeacher = sharePrefs.getString(SHARED_LOGIN_TYPE, "");
-            if (isTeacher.equalsIgnoreCase("Teacher")) {
+            if (isTeacher != null && isTeacher.equalsIgnoreCase("Teacher")) {
                 findViewById(R.id.hobbies_layout).setVisibility(View.GONE);
                 findViewById(R.id.guardian_layout).setVisibility(View.GONE);
                 findViewById(R.id.teacher_layout).setVisibility(View.GONE);
