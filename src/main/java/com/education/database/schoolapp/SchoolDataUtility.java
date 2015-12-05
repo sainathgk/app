@@ -83,6 +83,41 @@ public class SchoolDataUtility {
         return msgArray;
     }
 
+    public ArrayList<MessageItem> getChatMessages(Context context) {
+        String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id", "sender_name",
+                "sender_profile_image", "read_status"};
+        ArrayList<MessageItem> msgArray = null;
+        Cursor msgCursor = null;
+
+        String selection = " member_ids like '%" + mLoginName + "%' and message_type = 1";
+
+        msgCursor = context.getContentResolver().query(Uri.parse("content://com.education.schoolapp/received_messages_all"),
+                messageProjection, selection, null, "start_date ASC");
+        if (msgCursor != null && msgCursor.getCount() > 0) {
+            msgArray = new ArrayList<>(msgCursor.getCount());
+
+            while (msgCursor.moveToNext()) {
+                MessageItem msgItem = new MessageItem();
+                msgItem.msgId = msgCursor.getString(msgCursor.getColumnIndex("message_id"));
+                msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_name"));
+                msgItem.msgTo = msgCursor.getString(msgCursor.getColumnIndex("member_ids"));
+                msgItem.msgTitle = msgCursor.getString(msgCursor.getColumnIndex("subject"));
+                msgItem.msgDescription = msgCursor.getString(msgCursor.getColumnIndex("body"));
+                msgItem.msgDate = msgCursor.getString(msgCursor.getColumnIndex("start_date"));
+                /*msgItem.msgAttachment = (msgCursor.getString(msgCursor.getColumnIndex("msg_attachment_path")) != null) ? true : false;*/
+                msgItem.msgReadStatus = msgCursor.getShort(msgCursor.getColumnIndex("read_status"));
+                msgItem.msgFromImage = msgCursor.getBlob(msgCursor.getColumnIndex("sender_profile_image"));
+
+                msgArray.add(msgItem);
+            }
+        }
+        if (msgCursor != null) {
+            msgCursor.close();
+        }
+
+        return msgArray;
+    }
+
     public ArrayList<MessageItem> getSavedMessages(Context context) {
         String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id", "sender_name",
                 "sender_profile_image", "read_status"};
