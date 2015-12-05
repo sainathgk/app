@@ -120,10 +120,19 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessagesListAdapte
                     Log.i("Sainath", "Message Tag is empty");
                     Toast.makeText(mContext, "Message Tag is empty", Toast.LENGTH_SHORT).show();
                 }
-                Intent messageViewIntent = new Intent(mContext, MessageViewActivity.class);
+
+                Intent messageViewIntent = new Intent();
                 messageViewIntent.putExtra("msg_id", (String) v.getTag());
                 messageViewIntent.putExtra("msg_box", mMsgBox);
                 messageViewIntent.putExtra("msg_type", mMsgType);
+                messageViewIntent.putExtra("msg_title", ((TextView) v.findViewById(R.id.msg_title)).getText());
+                messageViewIntent.putExtra("msg_members", (String) v.getTag());
+                if (mMsgType == 1) {
+                    messageViewIntent.setClass(mContext, MessageChatViewActivity.class);
+                } else if (mMsgType == 2) {
+                    messageViewIntent.setClass(mContext, MessageViewActivity.class);
+                }
+
                 mContext.startActivity(messageViewIntent);
             }
         });
@@ -144,7 +153,11 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessagesListAdapte
     public void onBindViewHolder(ViewHolder holder, int position) {
 
         holder.mMsgTitle.setText(msgData.get(position).msgFrom);
-        holder.mMsgItemView.setTag(msgData.get(position).msgId);
+        if (mMsgType == 1) {
+            holder.mMsgItemView.setTag(msgData.get(position).msgFromId);
+        } else if (mMsgType == 2) {
+            holder.mMsgItemView.setTag(msgData.get(position).msgId);
+        }
         holder.mMsgDescription.setText(msgData.get(position).msgTitle);
         holder.mMsgTimeStamp.setText(msgData.get(position).msgDate);
         if (msgData.get(position).msgReadStatus == 1) {

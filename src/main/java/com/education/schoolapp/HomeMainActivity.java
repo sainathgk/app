@@ -195,7 +195,7 @@ public class HomeMainActivity extends AppCompatActivity
             byte[] profilePic = schoolData.getMemberProfilePic(this);
 
             mNavLoginName.setText(studentDetails[0]);
-            mNavClassName.setText(getString(R.string.nav_drawer_class) + studentDetails[1]);
+            mNavClassName.setText(getString(R.string.nav_drawer_class) + " " + studentDetails[1]);
             mNavProfileImage.setImageBitmap(BitmapFactory.decodeByteArray(profilePic, 0, profilePic.length));
         }
 
@@ -381,7 +381,7 @@ public class HomeMainActivity extends AppCompatActivity
     }
 
     public static String getDateString(Long timeMilliSeconds) {
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM");
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
 
         Calendar calendar = Calendar.getInstance();
         try {
@@ -494,6 +494,12 @@ public class HomeMainActivity extends AppCompatActivity
             Toast.makeText(this, "School's Facebook page will be launched", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_website) {
             Toast.makeText(this, "School's Website will be launched", Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.nav_messages) {
+            mViewPager.setCurrentItem(0, true);
+        } else if (id == R.id.nav_notifications) {
+            mViewPager.setCurrentItem(1, true);
+        } else if (id == R.id.nav_albums) {
+            mViewPager.setCurrentItem(2, true);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

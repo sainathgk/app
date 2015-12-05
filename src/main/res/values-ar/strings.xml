@@ -62,5 +62,8 @@
     <string name="action_save">حفظ</string>
 
     <string name="chat_compose_input">Enter Message here</string>
+    <string name="nav_messages">Messages</string>
+    <string name="nav_notifications">Notifications</string>
+    <string name="nav_albums">Album</string>
 
 </resources>

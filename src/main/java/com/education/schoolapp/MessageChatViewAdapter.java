@@ -26,6 +26,7 @@ public class MessageChatViewAdapter extends RecyclerView.Adapter<MessageChatView
 
     private static final String APP_SHARED_PREFS = "school_preferences";
     private static final String SHARED_LOGIN_NAME = "schoolUserLoginName";
+    private String loginName;
 
     public class ChatViewHolder extends RecyclerView.ViewHolder {
         public ImageView mSenderImage;
@@ -41,17 +42,31 @@ public class MessageChatViewAdapter extends RecyclerView.Adapter<MessageChatView
         }
     }
 
-    public void updateData(Context mContext) {
+    public void updateData(Context mContext, String senderId) {
         sharePrefs = mContext.getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
 
-        String loginName = sharePrefs.getString(SHARED_LOGIN_NAME, "");
+        loginName = sharePrefs.getString(SHARED_LOGIN_NAME, "");
         mSchoolDB = new SchoolDataUtility(loginName, false);
-        msgData = mSchoolDB.getChatMessages(mContext);
+        msgData = mSchoolDB.getChatMessages(mContext, senderId);
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (msgData.get(position).msgFromId.equalsIgnoreCase(loginName)) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     @Override
     public ChatViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.message_chat_bubble, parent, false);
+        View itemView;
+        if (viewType == 1) {
+            itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.message_chat_right_bubble, parent, false);
+        } else {
+            itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.message_chat_bubble, parent, false);
+        }
 
         ChatViewHolder cvh = new ChatViewHolder(itemView);
 

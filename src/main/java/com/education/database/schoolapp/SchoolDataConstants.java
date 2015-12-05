@@ -59,7 +59,7 @@ public class SchoolDataConstants {
 
     public final static String CREATE_RECEIVED_MESSAGES_ALL = CREATE_TABLE + RECEIVED_MESSAGES_ALL + " (subject TEXT NOT NULL, body TEXT NOT NULL, " +
             "sender_id TEXT NOT NULL, sender_name TEXT, sender_profile_image BLOB, member_ids TEXT NOT NULL, member_names TEXT, message_type INTEGER, start_date TEXT, end_date TEXT, " +
-            "message_id TEXT UNIQUE NOT NULL, album_ids TEXT, saved INTEGER DEFAULT 0, read_status INTEGER DEFAULT 1); " ;
+            "message_id TEXT UNIQUE, album_ids TEXT, saved INTEGER DEFAULT 0, read_status INTEGER DEFAULT 1, local_msg_id INTEGER, status INTEGER DEFAULT 0); " ;
 
     public final static String CREATE_ALBUM_IMAGES = CREATE_TABLE + ALBUM_IMAGES + " (image_local_path TEXT, image_name TEXT, " +
             "image_date TEXT, album_name TEXT, album_id TEXT, image_id TEXT UNIQUE, member_ids TEXT, status INTEGER DEFAULT 0, " +

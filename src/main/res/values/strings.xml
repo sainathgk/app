@@ -73,7 +73,7 @@
     <string name="action_delete">Delete</string>
 
     <!--Student Profile View Strings-->
-    <string name="profile_view_title">Student Profile</string>
+    <string name="profile_view_title">My Profile</string>
     <string name="profile_name">Name</string>
     <string name="profile_father">Father</string>
     <string name="profile_mother">Mother</string>
@@ -94,5 +94,8 @@
     <string name="saved_msgs_outbox_fragment">Outbox</string>
 
     <string name="chat_compose_input">Enter Message here</string>
+    <string name="nav_messages">Messages</string>
+    <string name="nav_notifications">Notifications</string>
+    <string name="nav_albums">Album</string>
 
 </resources>

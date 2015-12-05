@@ -78,7 +78,9 @@
             android:name=".ComposeActivity"
             android:label="@string/compose_title" />
 
-        <activity android:name=".MessageViewActivity"/>
+        <activity android:name=".MessageViewActivity" />
+
+        <activity android:name=".MessageChatViewActivity" />
 
         <activity android:name=".CustomGalleryActivity">
             <intent-filter>

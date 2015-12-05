@@ -2,21 +2,14 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:gravity="right"
     android:padding="5dp">
-
-    <ImageView
-        android:id="@+id/person_image"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:src="@drawable/ic_person_black_36dp" />
 
     <LinearLayout
         android:id="@+id/userAndMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toEndOf="@id/person_image"
-        android:layout_toRightOf="@id/person_image"
-        android:background="@android:color/holo_green_light"
+        android:background="@android:color/holo_blue_light"
         android:orientation="vertical"
         android:padding="2dp">
 
@@ -52,5 +45,13 @@
             android:textColor="@android:color/black" />
 
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/person_image"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_toEndOf="@id/userAndMessage"
+        android:layout_toRightOf="@id/userAndMessage"
+        android:src="@drawable/ic_person_black_36dp" />
 
 </RelativeLayout>

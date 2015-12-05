@@ -12,12 +12,14 @@ public class MessageItem {
     public String msgTitle;
     public String msgDescription;
     public String msgFrom;
+    public String msgFromId;
     public String msgTo;
     public String msgDate;
     public boolean msgAttachment = false;
     public short msgReadStatus = 0;
     public byte[] msgFromImage;
     public String msgId;
+    public String msgMembers;
 
     public String toString() {
         JSONObject msgJson = new JSONObject();

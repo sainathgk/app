@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/side_nav_bar"
+    android:background="@android:color/darker_gray"
     android:orientation="vertical"
     tools:context="com.education.schoolapp.MessageChatViewActivity">
 
@@ -12,36 +12,39 @@
         android:layout_width="match_parent"
         android:layout_height="0px"
         android:layout_weight="1"
-        android:visibility="visible"
-        android:scrollbars="vertical" />
+        android:scrollbars="vertical"
+        android:visibility="visible" />
 
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
         android:layout_margin="5dp"
+        android:background="@android:color/white"
         android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/attachmentButton"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
             android:layout_weight="0.7"
             android:src="@drawable/ic_attachment_black_24dp" />
 
         <EditText
             android:id="@+id/message"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:hint="@string/chat_compose_input"
-            android:textSize="20sp"
+            android:layout_height="wrap_content"
             android:layout_weight="4"
-            android:gravity="bottom" />
+            android:gravity="bottom"
+            android:hint="@string/chat_compose_input"
+            android:singleLine="false"
+            android:textSize="20sp" />
 
         <ImageButton
             android:id="@+id/sendMessageButton"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
             android:layout_weight="0.7"
             android:src="@android:drawable/ic_menu_send" />
 
