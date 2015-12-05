@@ -20,6 +20,7 @@ import com.education.database.schoolapp.SchoolDataUtility;
 public class ProfileScrollingActivity extends AppCompatActivity {
 
     private static final String APP_SHARED_PREFS = "school_preferences";
+    private static final String SHARED_LOGIN_TYPE = "schoolUserLoginType";
     private static final String SHARED_LOGIN_NAME = "schoolUserLoginName";
     private SharedPreferences sharePrefs;
     private String mLoginName;
@@ -84,6 +85,14 @@ public class ProfileScrollingActivity extends AppCompatActivity {
                 mTeacherView.setText(mProfileDetails.studentTeacherName);
                 mProfileImageView.setImageBitmap(mProfileDetails.studentImage);
             }
+
+            String isTeacher = sharePrefs.getString(SHARED_LOGIN_TYPE, "");
+            if (isTeacher.equalsIgnoreCase("Teacher")) {
+                findViewById(R.id.hobbies_layout).setVisibility(View.GONE);
+                findViewById(R.id.guardian_layout).setVisibility(View.GONE);
+                findViewById(R.id.teacher_layout).setVisibility(View.GONE);
+            }
+
         }
     }
 
