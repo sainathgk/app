@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -33,6 +34,8 @@ public class GcmService extends GcmListenerService {
 
     private static final String TAG = GcmService.class.toString();
     private NetworkConnectionUtility networkConn;
+    private static final String SHARED_MSG_VIEW = "schoolChatMsgView";
+    private static final String APP_SHARED_PREFS = "school_preferences";
 
     public GcmService() {
         super();
@@ -84,7 +87,7 @@ public class GcmService extends GcmListenerService {
                 }
                 try {
                     JSONObject messageObj = new JSONObject(networkResult);
-                    String[] messageProjection = {"subject","body", "sender_id", "start_date", "end_date", "message_type"};
+                    String[] messageProjection = {"subject","body", "sender_id", "group_id", "start_date", "end_date", "message_type"};
                     JSONUtility jsonUtility = new JSONUtility();
                     jsonUtility.setColumsList(messageProjection);
 
@@ -140,22 +143,26 @@ public class GcmService extends GcmListenerService {
 
                     getContentResolver().update(Uri.parse("content://com.education.schoolapp/server_message_ids"), msgIdUpdate, selection, null);
 
-                    Intent notiIntent = new Intent(getApplicationContext(), HomeMainActivity.class);
+                    SharedPreferences sharePrefs = getApplicationContext().getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
 
-                    PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notiIntent,
-                            PendingIntent.FLAG_UPDATE_CURRENT);
-                    NotificationManager mNotiManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-                    Notification.Builder mNotiBuilder = new Notification.Builder(getApplicationContext());
+                    if (sharePrefs.getBoolean(SHARED_MSG_VIEW, true)) {
+                        Intent notiIntent = new Intent(getApplicationContext(), HomeMainActivity.class);
 
-                    Notification noti = mNotiBuilder.setContentTitle(msgValues.getAsString("subject"))
-                            .setContentText(msgValues.getAsString("body"))
-                            .setSmallIcon(R.drawable.ic_school_black_36dp)
-                            .setContentIntent(contentIntent)
-                            .setAutoCancel(true)
-                            .build();
-                    noti.defaults |= Notification.DEFAULT_ALL;
+                        PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notiIntent,
+                                PendingIntent.FLAG_UPDATE_CURRENT);
+                        NotificationManager mNotiManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                        Notification.Builder mNotiBuilder = new Notification.Builder(getApplicationContext());
 
-                    mNotiManager.notify(10, noti);
+                        Notification noti = mNotiBuilder.setContentTitle(msgValues.getAsString("sender_name"))
+                                .setContentText(msgValues.getAsString("subject"))
+                                .setSmallIcon(R.drawable.ic_school_black_36dp)
+                                .setContentIntent(contentIntent)
+                                .setAutoCancel(true)
+                                .build();
+                        noti.defaults |= Notification.DEFAULT_ALL;
+
+                        mNotiManager.notify(10, noti);
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

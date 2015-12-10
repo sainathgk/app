@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_gravity="right"
     android:gravity="right"
     android:padding="5dp">
 
@@ -9,7 +10,7 @@
         android:id="@+id/userAndMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@android:color/holo_blue_light"
+        android:background="#DEFFC4"
         android:orientation="vertical"
         android:padding="2dp">
 
@@ -18,31 +19,39 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Sainath G K"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="@android:color/black" />
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="@android:color/black"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@android:color/black" />
+            android:background="@android:color/black"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/textMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:alpha="0.9"
             android:padding="2dp"
-            android:text="Hello All, This is Sainath. \nHow are you? \nThanks"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="@android:color/black" />
+            android:maxEms="12"
+            android:text="Hello All, This is Sainath. \nHow are you? \nThanks asdfjhkaj hskdfjhasdkfh ash fksjadhfkasjhdfks"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="@android:color/black"
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/textTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="right|bottom"
+            android:alpha="0.7"
             android:text="29-Nov"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="@android:color/black" />
+            android:textColor="@android:color/black"
+            android:textSize="12sp" />
 
     </LinearLayout>
 

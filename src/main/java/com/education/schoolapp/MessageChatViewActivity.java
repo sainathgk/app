@@ -7,8 +7,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -24,6 +26,7 @@ import android.widget.ImageButton;
 import com.education.connection.schoolapp.JSONUtility;
 import com.education.connection.schoolapp.NetworkConnectionUtility;
 import com.education.connection.schoolapp.NetworkConstants;
+import com.education.database.schoolapp.SchoolDataConstants;
 import com.education.database.schoolapp.SchoolDataUtility;
 
 import org.json.JSONArray;
@@ -50,12 +53,15 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
 
     private static final String APP_SHARED_PREFS = "school_preferences";
     private static final String SHARED_LOGIN_NAME = "schoolUserLoginName";
+    private static final String SHARED_MSG_VIEW = "schoolChatMsgView";
     private SharedPreferences sharePrefs;
     private String mLoginName;
     private int mComposeMessageId;
     private HashMap<String, String> mStudentsMap;
     private String mTextTo;
     private String mFromName;
+    private boolean mIsNewGroup;
+    private SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +70,7 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
         mFromName = getIntent().getStringExtra("msg_title");
         setTitle(mFromName);
         mTextTo = getIntent().getStringExtra("msg_members");
+        mIsNewGroup = getIntent().getBooleanExtra("new_group", false);
 
         mChatList = (RecyclerView) findViewById(R.id.chat_messages_list);
         mChatList.setHasFixedSize(false);
@@ -72,7 +79,9 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
         mChatList.setItemAnimator(new DefaultItemAnimator());
 
         mChatListAdapter = new MessageChatViewAdapter();
-        mChatListAdapter.updateData(this, mTextTo);
+        if (mTextTo != null && !mTextTo.isEmpty()) {
+            mChatListAdapter.updateData(this, mTextTo);
+        }
         mChatList.setAdapter(mChatListAdapter);
 
         mChatList.scrollToPosition(mChatListAdapter.getItemCount() - 1);
@@ -91,6 +100,52 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
         mLoginName = sharePrefs.getString(SHARED_LOGIN_NAME, "");
 
         mStudentsMap = new SchoolDataUtility().getClassStudents(this);
+
+        getContentResolver().registerContentObserver(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL), true, new ContentObserver(new Handler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                super.onChange(selfChange);
+                if (mChatListAdapter != null) {
+                    mChatListAdapter.updateData(getApplicationContext(), mTextTo);
+                    mChatListAdapter.notifyDataSetChanged();
+                }
+                if (mChatList != null) {
+                    mChatList.invalidate();
+                }
+            }
+        });
+
+        ContentValues msgUpdate = new ContentValues();
+        String selection = "group_id like '" + mTextTo + "'";
+
+        msgUpdate.put("read_status", 0);
+
+        getContentResolver().update(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgUpdate, selection, null);
+        SharedPreferences sharePrefs = getApplicationContext().getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
+
+        editor = sharePrefs.edit();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        editor.putBoolean(SHARED_MSG_VIEW, true);
+        editor.apply();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        editor.putBoolean(SHARED_MSG_VIEW, false);
+        editor.apply();
+    }
+
+    @Override
+    protected void onDestroy() {
+        editor.putBoolean(SHARED_MSG_VIEW, false);
+        editor.apply();
+        super.onDestroy();
     }
 
     @Override
@@ -117,13 +172,13 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
         NetworkResp networkResp = new NetworkResp();
         networkConn.setNetworkListener(networkResp);
 
-        String[] toStringArray = (String[]) Arrays.asList(mTextTo.split(",")).toArray();
+        String[] toStringArray = (String[]) Arrays.asList(mFromName.split(",")).toArray();
         JSONArray toSenderIds = new JSONArray();
         int toSenderIdsLength = toStringArray.length;
 
         for (int i = 0; i < toSenderIdsLength; i++) {
-            //toSenderIds.put(mStudentsMap.get(toStringArray[i]));
-            toSenderIds.put(toStringArray[i]);
+            toSenderIds.put(mStudentsMap.get(toStringArray[i]));
+            //toSenderIds.put(toStringArray[i]);
         }
 
         JSONObject compJsonObj = new JSONObject();
@@ -137,6 +192,12 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
             compJsonObj.put("sender_profile_image", Base64.encodeToString(new SchoolDataUtility(mLoginName, true).getMemberProfilePic(this), 0));
             compJsonObj.put("start_date", HomeMainActivity.getDateString(System.currentTimeMillis()));
             compJsonObj.put("member_ids", toSenderIds);
+            if (mIsNewGroup) {
+                compJsonObj.put("group_status", 1);
+            } else {
+                compJsonObj.put("group_status", 2);
+                compJsonObj.put("group_id", mTextTo);
+            }
             msgJsonObj.put("message", compJsonObj);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -154,7 +215,7 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
             msgValues.remove("sender_profile_image");
             msgValues.put("sender_profile_image", new SchoolDataUtility(mLoginName, true).getMemberProfilePic(this));
             msgValues.put("local_msg_id", mComposeMessageId);
-            msgValues.put("member_names", mTextTo);
+            msgValues.put("member_names", mFromName);
 
             getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
         } catch (JSONException e) {
@@ -175,7 +236,10 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
                     try {
                         JSONObject respObj = new JSONObject(networkResult);
 
-                        msgRespValues.put("message_id", respObj.getString("$oid"));
+                        msgRespValues.put("message_id", respObj.getJSONObject("_id").getString("$oid"));
+                        //msgRespValues.put("message_id", respObj.getString("$oid"));
+                        msgRespValues.put("group_id", respObj.getString("group_id"));
+                        //msgRespValues.put("group_id", respObj.getString("$oid"));
                         msgRespValues.put("status", 1);
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -186,7 +250,7 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
 
                 mComposeEdit.setText("");
                 if (mChatListAdapter != null) {
-                    mChatListAdapter.updateData(getApplicationContext(), mFromName);
+                    mChatListAdapter.updateData(getApplicationContext(), mTextTo);
                     mChatListAdapter.notifyDataSetChanged();
                 }
                 if (mChatList != null) {
@@ -240,8 +304,7 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == SELECT_FILE) {
                 //onSelectFromGalleryResult(data);
-            }
-            else if (requestCode == REQUEST_CAMERA) {
+            } else if (requestCode == REQUEST_CAMERA) {
                 //onCaptureImageResult(data);
             }
         }

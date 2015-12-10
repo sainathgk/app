@@ -33,6 +33,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
@@ -129,6 +130,7 @@ public class HomeMainActivity extends AppCompatActivity
     private int mMessageFinalCount;
     private ArrayList<String> mAlbumIds = new ArrayList<String>();
     private int mAlbumIdx = 0;
+    private ArrayList<String> mSelectedStudentsArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,13 +145,20 @@ public class HomeMainActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
 
-                if (mViewPager.getCurrentItem() == 2) {
+                int viewPagerItem = mViewPager.getCurrentItem();
+                if (viewPagerItem == 2) {
                     selectImage();
                     return;
                 }
+
+                if (viewPagerItem == 0) {
+                    buildStudentsListDialog();
+                    return;
+                }
+
                 Intent composeIntent = new Intent(getBaseContext(), ComposeActivity.class);
                 int composeType = mViewPager.getCurrentItem();
-                if (mViewPager.getCurrentItem() > 1) {
+                if (viewPagerItem > 1) {
                     composeType = -1;
                 }
                 composeIntent.putExtra("Type", composeType + 1);
@@ -266,6 +275,7 @@ public class HomeMainActivity extends AppCompatActivity
         mStudentsMap = new SchoolDataUtility().getClassStudents(this);
         if (mStudentsMap != null) {
             mStudentIdArray = new String[mStudentsMap.size()];
+            mSelectedStudentsArray = new ArrayList<String>(mStudentsMap.size());
             int idx = 0;
 
             for (Map.Entry<String, String> mapEntry : mStudentsMap.entrySet()) {
@@ -381,7 +391,9 @@ public class HomeMainActivity extends AppCompatActivity
     }
 
     public static String getDateString(Long timeMilliSeconds) {
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
+        //TODO - To be changed once the server side is changed
+        //SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
 
         Calendar calendar = Calendar.getInstance();
         try {
@@ -505,6 +517,42 @@ public class HomeMainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void buildStudentsListDialog() {
+        final AlertDialog.Builder stuBuilder = new AlertDialog.Builder(this);
+        final AlertDialog stuAlertDialog = stuBuilder.create();
+
+        stuBuilder.setTitle(R.string.students_title_dialog_title);
+        stuBuilder.setMultiChoiceItems(mStudentIdArray, null, new DialogInterface.OnMultiChoiceClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                if (mSelectedStudentsArray != null) {
+                    if (isChecked) {
+                        mSelectedStudentsArray.add(mStudentIdArray[which]);
+                    } else {
+                        int index = mSelectedStudentsArray.indexOf(mStudentIdArray[which]);
+                        mSelectedStudentsArray.remove(index);
+                    }
+                }
+            }
+        });
+        stuBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                Toast.makeText(getApplicationContext(), "Students are selected", Toast.LENGTH_SHORT).show();
+                Intent messageViewIntent = new Intent();
+                messageViewIntent.putExtra("msg_title", TextUtils.join(",", mSelectedStudentsArray));
+                messageViewIntent.putExtra("msg_members", "");
+                messageViewIntent.putExtra("new_group", true);
+                messageViewIntent.setClass(getApplicationContext(), MessageChatViewActivity.class);
+
+                startActivity(messageViewIntent);
+            }
+        });
+
+        stuBuilder.show();
     }
 
     private void buildAlbumNameDialog() {
@@ -752,7 +800,7 @@ public class HomeMainActivity extends AppCompatActivity
                 }
                 try {
                     JSONObject messageObj = new JSONObject(networkResult);
-                    String[] messageProjection = {"subject", "body", "sender_id", "start_date", "end_date", "message_type"};
+                    String[] messageProjection = {"subject", "body", "sender_id", "group_id", "start_date", "end_date", "message_type"};
                     JSONUtility jsonUtility = new JSONUtility();
                     jsonUtility.setColumsList(messageProjection);
 

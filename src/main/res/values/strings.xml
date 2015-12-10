@@ -26,6 +26,7 @@
 
     <!--Home Main Activity Strings-->
     <string name="album_title_dialog_title">Enter Album Name</string>
+    <string name="students_title_dialog_title">Select Students</string>
     <string name="album_upload_progress">Uploading …</string>
     <string name="multimedia_download_progress">Downloading …</string>
     <string name="message_fetching_data">Fetching Data …</string>

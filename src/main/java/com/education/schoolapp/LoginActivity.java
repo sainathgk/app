@@ -279,7 +279,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 }
                 try {
                     JSONObject messageObj = new JSONObject(networkResult);
-                    String[] messageProjection = {"subject", "body", "sender_id", "start_date", "end_date", "message_type"};
+                    String[] messageProjection = {"subject", "body", "sender_id", "group_id", "start_date", "end_date", "message_type"};
                     JSONUtility jsonUtility = new JSONUtility();
                     jsonUtility.setColumsList(messageProjection);
 

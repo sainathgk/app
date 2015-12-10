@@ -36,7 +36,7 @@ public class SchoolDataUtility {
 
     public ArrayList<MessageItem> getAllMessages(Context context) {
         String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id", "sender_name",
-                "sender_profile_image", "read_status"};
+                "sender_profile_image", "read_status", "group_id", "member_names"};
         ArrayList<MessageItem> msgArray = null;
         Cursor msgCursor = null;
         /*String[] messageProjection = {"msg_id", "from_name", "from_image", "msg_title", "msg_description",
@@ -54,7 +54,7 @@ public class SchoolDataUtility {
 */
 
         //String selection = " member_ids like '%" + mLoginName + "%' and message_type = 1 GROUP BY member_ids ";
-        String selection = " message_type = 1 GROUP BY member_ids, sender_id ";
+        String selection = " message_type = 1 GROUP BY group_id ";
 
         msgCursor = context.getContentResolver().query(Uri.parse("content://com.education.schoolapp/received_messages_all"),
                 messageProjection, selection, null, "start_date DESC");
@@ -64,8 +64,9 @@ public class SchoolDataUtility {
             while (msgCursor.moveToNext()) {
                 MessageItem msgItem = new MessageItem();
                 msgItem.msgId = msgCursor.getString(msgCursor.getColumnIndex("message_id"));
-                msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_name"));
+                msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("member_names"));
                 msgItem.msgFromId = msgCursor.getString(msgCursor.getColumnIndex("sender_id"));
+                msgItem.msgGroupId = msgCursor.getString(msgCursor.getColumnIndex("group_id"));
                 msgItem.msgTo = msgCursor.getString(msgCursor.getColumnIndex("member_ids"));
                 msgItem.msgTitle = msgCursor.getString(msgCursor.getColumnIndex("subject"));
                 msgItem.msgDescription = msgCursor.getString(msgCursor.getColumnIndex("body"));
@@ -86,13 +87,11 @@ public class SchoolDataUtility {
 
     public ArrayList<MessageItem> getChatMessages(Context context, String sender) {
         String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id", "sender_name",
-                "sender_profile_image", "read_status"};
+                "sender_profile_image", "read_status", "group_id"};
         ArrayList<MessageItem> msgArray = null;
         Cursor msgCursor = null;
 
-        String selection = " message_type = 1 and " +
-                            "sender_id like '%" + mLoginName + "%' or sender_id like '%" + sender + "%' and " +
-                            "member_ids like '%" + mLoginName + "%' or member_ids like '%" + sender + "%' ";
+        String selection = " message_type = 1 and group_id like '" + sender + "'";
 
         msgCursor = context.getContentResolver().query(Uri.parse("content://com.education.schoolapp/received_messages_all"),
                 messageProjection, selection, null, "start_date ASC");
@@ -104,6 +103,7 @@ public class SchoolDataUtility {
                 msgItem.msgId = msgCursor.getString(msgCursor.getColumnIndex("message_id"));
                 msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_name"));
                 msgItem.msgFromId = msgCursor.getString(msgCursor.getColumnIndex("sender_id"));
+                msgItem.msgGroupId = msgCursor.getString(msgCursor.getColumnIndex("group_id"));
                 msgItem.msgTo = msgCursor.getString(msgCursor.getColumnIndex("member_ids"));
                 msgItem.msgMembers = msgItem.msgTo.concat("," + msgItem.msgFromId);
                 msgItem.msgTitle = msgCursor.getString(msgCursor.getColumnIndex("subject"));
@@ -239,7 +239,7 @@ public class SchoolDataUtility {
 
             while (msgCursor.moveToNext()) {
                 MessageItem msgItem = new MessageItem();
-                msgItem.msgId = msgCursor.getString(msgCursor.getColumnIndex("message_id"));
+                msgItem.msgGroupId = msgItem.msgId = msgCursor.getString(msgCursor.getColumnIndex("message_id"));
                 msgItem.msgFrom = msgCursor.getString(msgCursor.getColumnIndex("sender_name"));
                 msgItem.msgTo = msgCursor.getString(msgCursor.getColumnIndex("member_ids"));
                 msgItem.msgTitle = msgCursor.getString(msgCursor.getColumnIndex("subject"));

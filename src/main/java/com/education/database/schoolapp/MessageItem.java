@@ -20,6 +20,7 @@ public class MessageItem {
     public byte[] msgFromImage;
     public String msgId;
     public String msgMembers;
+    public String msgGroupId;
 
     public String toString() {
         JSONObject msgJson = new JSONObject();
