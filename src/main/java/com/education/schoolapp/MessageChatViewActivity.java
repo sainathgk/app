@@ -17,6 +17,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
@@ -33,6 +34,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
@@ -53,6 +55,7 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
 
     private static final String APP_SHARED_PREFS = "school_preferences";
     private static final String SHARED_LOGIN_NAME = "schoolUserLoginName";
+    private static final String SHARED_LOGIN_TYPE = "schoolUserLoginType";
     private static final String SHARED_MSG_VIEW = "schoolChatMsgView";
     private SharedPreferences sharePrefs;
     private String mLoginName;
@@ -62,13 +65,15 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
     private String mFromName;
     private boolean mIsNewGroup;
     private SharedPreferences.Editor editor;
+    private String mLoginType = "";
+    private SchoolDataUtility mSchoolDataUtility;
+    private String currUserName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message_chat_view);
         mFromName = getIntent().getStringExtra("msg_title");
-        setTitle(mFromName);
         mTextTo = getIntent().getStringExtra("msg_members");
         mIsNewGroup = getIntent().getBooleanExtra("new_group", false);
 
@@ -79,9 +84,20 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
         mChatList.setItemAnimator(new DefaultItemAnimator());
 
         mChatListAdapter = new MessageChatViewAdapter();
+
+        sharePrefs = getApplicationContext().getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
+        mLoginName = sharePrefs.getString(SHARED_LOGIN_NAME, "");
+        mLoginType = sharePrefs.getString(SHARED_LOGIN_TYPE, "");
+
+        mSchoolDataUtility = new SchoolDataUtility(mLoginName, mLoginType.equalsIgnoreCase("Teacher"));
+
         if (mTextTo != null && !mTextTo.isEmpty()) {
             mChatListAdapter.updateData(this, mTextTo);
+            mFromName = mSchoolDataUtility.getGroupMembersNames(this, mTextTo);
+        } else {
+            mFromName = mFromName.concat(",You");
         }
+
         mChatList.setAdapter(mChatListAdapter);
 
         mChatList.scrollToPosition(mChatListAdapter.getItemCount() - 1);
@@ -96,10 +112,10 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
         progress.setIndeterminate(true);
         progress.setTitle(R.string.compose_send_progress);
 
-        sharePrefs = getApplicationContext().getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
-        mLoginName = sharePrefs.getString(SHARED_LOGIN_NAME, "");
-
         mStudentsMap = new SchoolDataUtility().getClassStudents(this);
+        currUserName = mSchoolDataUtility.getStudentName(getApplicationContext())[0];
+
+        setTitle(mFromName);
 
         getContentResolver().registerContentObserver(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL), true, new ContentObserver(new Handler()) {
             @Override
@@ -132,6 +148,8 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
 
         editor.putBoolean(SHARED_MSG_VIEW, true);
         editor.apply();
+
+        mChatList.scrollToPosition(mChatListAdapter.getItemCount() - 1);
     }
 
     @Override
@@ -147,6 +165,15 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
         editor.apply();
         super.onDestroy();
     }
+
+    /*@Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (mChatList != null) {
+            mChatList.invalidate();
+            mChatList.scrollToPosition(mChatListAdapter.getItemCount() - 1);
+        }
+    }*/
 
     @Override
     public void onClick(View v) {
@@ -172,15 +199,31 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
         NetworkResp networkResp = new NetworkResp();
         networkConn.setNetworkListener(networkResp);
 
-        String[] toStringArray = (String[]) Arrays.asList(mFromName.split(",")).toArray();
-        JSONArray toSenderIds = new JSONArray();
-        int toSenderIdsLength = toStringArray.length;
+        JSONArray toSenderIds;
+        if (mTextTo != null && !mTextTo.isEmpty()) {
+            toSenderIds = mSchoolDataUtility.getGroupMembersIds(this, mTextTo);
+        } else {
+            String[] toStringArray = (String[]) Arrays.asList(mFromName.split(",")).toArray();
+            int toSenderIdsLength = toStringArray.length;
+            toSenderIds = new JSONArray();
+            for (int i = 0; i < toSenderIdsLength; i++) {
+                if (!toStringArray[i].equalsIgnoreCase("You"))
+                    toSenderIds.put(mStudentsMap.get(toStringArray[i]));
+                //toSenderIds.put(toStringArray[i]);
+            }
 
-        for (int i = 0; i < toSenderIdsLength; i++) {
-            toSenderIds.put(mStudentsMap.get(toStringArray[i]));
-            //toSenderIds.put(toStringArray[i]);
+            /*for (int j = 0; j < toSenderIds.length(); j++) {
+                try {
+                    if (toSenderIds.getString(j).equalsIgnoreCase(mLoginName)) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                            toSenderIds.remove(j);
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }*/
         }
-
         JSONObject compJsonObj = new JSONObject();
         JSONObject msgJsonObj = new JSONObject();
         try {
@@ -188,8 +231,8 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
             compJsonObj.put("body", message);
             compJsonObj.put("message_type", 1);
             compJsonObj.put("sender_id", mLoginName);
-            compJsonObj.put("sender_name", new SchoolDataUtility(mLoginName, true).getStudentName(getApplicationContext())[0]);
-            compJsonObj.put("sender_profile_image", Base64.encodeToString(new SchoolDataUtility(mLoginName, true).getMemberProfilePic(this), 0));
+            compJsonObj.put("sender_name", currUserName);
+            compJsonObj.put("sender_profile_image", Base64.encodeToString(mSchoolDataUtility.getMemberProfilePic(this), 0));
             compJsonObj.put("start_date", HomeMainActivity.getDateString(System.currentTimeMillis()));
             compJsonObj.put("member_ids", toSenderIds);
             if (mIsNewGroup) {
@@ -206,16 +249,33 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
         networkConn.postMessage(msgJsonObj.toString());
 
         JSONUtility jsonUtility = new JSONUtility();
-        String[] composeColumns = {"subject", "body", "message_type", "sender_id", "sender_name", "start_date", "end_date", "member_ids"};
+        String[] composeColumns = {"subject", "body", "message_type", "sender_id", "sender_name", "start_date", "end_date", "group_id"};
         jsonUtility.setColumsList(composeColumns);
 
         try {
             ContentValues msgValues = jsonUtility.fromJSON(compJsonObj);
             mComposeMessageId = randInt();
-            msgValues.remove("sender_profile_image");
+            //msgValues.remove("sender_profile_image");
             msgValues.put("sender_profile_image", new SchoolDataUtility(mLoginName, true).getMemberProfilePic(this));
+            String memberString = toSenderIds.toString();
+            msgValues.put("member_ids", memberString.substring(2, memberString.length() - 2));
+            msgValues.put("members_count", toSenderIds.length());
             msgValues.put("local_msg_id", mComposeMessageId);
-            msgValues.put("member_names", mFromName);
+
+            /*String[] toStringArray = (String[]) Arrays.asList(mFromName.split(",")).toArray();
+            String[] memberNames = new String[toStringArray.length];
+
+            for (int j = 0, i = 0; j < toStringArray.length; j++) {
+                if (!toStringArray[j].equalsIgnoreCase(currUserName)) {
+                    memberNames[i] = toStringArray[j];
+                    i++;
+                }
+            }*/
+
+            ArrayList<String> memberStringArray = new ArrayList<String>(Arrays.asList(mFromName.split(",")));
+            memberStringArray.remove("You");
+
+            msgValues.put("member_names", TextUtils.join(",", memberStringArray));
 
             getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
         } catch (JSONException e) {
@@ -238,9 +298,13 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
 
                         msgRespValues.put("message_id", respObj.getJSONObject("_id").getString("$oid"));
                         //msgRespValues.put("message_id", respObj.getString("$oid"));
+                        if (mTextTo.isEmpty()) {
+                            mTextTo = respObj.getString("group_id");
+                        }
                         msgRespValues.put("group_id", respObj.getString("group_id"));
                         //msgRespValues.put("group_id", respObj.getString("$oid"));
                         msgRespValues.put("status", 1);
+                        msgRespValues.put("read_status", 0);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -255,8 +319,8 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
                 }
                 if (mChatList != null) {
                     mChatList.invalidate();
+                    mChatList.scrollToPosition(mChatListAdapter.getItemCount() - 1);
                 }
-                //finish();
             }
         }
     }

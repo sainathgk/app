@@ -62,6 +62,7 @@
                 android:layout_margin="10dp"
                 android:ems="10"
                 android:hint="@string/compose_msg_title"
+                android:visibility="gone"
                 android:inputType="textMultiLine|textCapSentences" />
 
             <EditText

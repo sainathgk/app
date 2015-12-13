@@ -198,7 +198,7 @@ public class HomeMainActivity extends AppCompatActivity
                 /*navigationView.getMenu().findItem(R.id.nav_student_profile).setVisible(false);
                 navigationView.getMenu().findItem(R.id.nav_saved_messages).setTitle("Outbox Messages");*/
             }
-            SchoolDataUtility schoolData = new SchoolDataUtility(mLoginName, false);
+            SchoolDataUtility schoolData = new SchoolDataUtility(mLoginName, mIsTeacher);
 
             String[] studentDetails = schoolData.getStudentName(this);
             byte[] profilePic = schoolData.getMemberProfilePic(this);
@@ -215,7 +215,7 @@ public class HomeMainActivity extends AppCompatActivity
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
-        mViewPager.setCurrentItem(1, true);
+        //mViewPager.setCurrentItem(1, true);
 
         mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -268,6 +268,12 @@ public class HomeMainActivity extends AppCompatActivity
             tabLayout.setTabMode(TabLayout.MODE_FIXED);
         }
         tabLayout.setupWithViewPager(mViewPager);
+
+        int msgType = getIntent().getIntExtra("message_type", 2);
+        if (msgType == 4) {
+            msgType--;
+        }
+        mViewPager.setCurrentItem(msgType - 1);
 
         mToView = new MultiAutoCompleteTextView(this);
         mToView.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
@@ -392,8 +398,8 @@ public class HomeMainActivity extends AppCompatActivity
 
     public static String getDateString(Long timeMilliSeconds) {
         //TODO - To be changed once the server side is changed
-        //SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
+        //SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
 
         Calendar calendar = Calendar.getInstance();
         try {
@@ -523,6 +529,7 @@ public class HomeMainActivity extends AppCompatActivity
         final AlertDialog.Builder stuBuilder = new AlertDialog.Builder(this);
         final AlertDialog stuAlertDialog = stuBuilder.create();
 
+        mSelectedStudentsArray.clear();
         stuBuilder.setTitle(R.string.students_title_dialog_title);
         stuBuilder.setMultiChoiceItems(mStudentIdArray, null, new DialogInterface.OnMultiChoiceClickListener() {
             @Override
@@ -544,8 +551,12 @@ public class HomeMainActivity extends AppCompatActivity
                 Toast.makeText(getApplicationContext(), "Students are selected", Toast.LENGTH_SHORT).show();
                 Intent messageViewIntent = new Intent();
                 messageViewIntent.putExtra("msg_title", TextUtils.join(",", mSelectedStudentsArray));
-                messageViewIntent.putExtra("msg_members", "");
-                messageViewIntent.putExtra("new_group", true);
+                String dbGroupId = new SchoolDataUtility(mLoginName, mIsTeacher).getGroupIdForMembers(getApplicationContext(), mSelectedStudentsArray);
+                messageViewIntent.putExtra("msg_members", dbGroupId);
+                if (dbGroupId != null && dbGroupId.isEmpty()) {
+                    messageViewIntent.putExtra("new_group", true);
+                }
+
                 messageViewIntent.setClass(getApplicationContext(), MessageChatViewActivity.class);
 
                 startActivity(messageViewIntent);
@@ -818,6 +829,7 @@ public class HomeMainActivity extends AppCompatActivity
                     String memberIdString = Joiner.on(",").skipNulls().join(memberIds);
                     msgValues.put("member_ids", memberIdString);
                     msgValues.put("member_names", Joiner.on(",").skipNulls().join(memberNames));
+                    msgValues.put("members_count", membersArray.length());
 
                     if (messageObj.getString("album_ids") != null && !messageObj.getString("album_ids").equalsIgnoreCase("null")) {
                         JSONArray albumArray = messageObj.getJSONArray("album_ids");

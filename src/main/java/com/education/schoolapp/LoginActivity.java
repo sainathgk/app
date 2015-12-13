@@ -310,6 +310,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     String memberIdString = Joiner.on(",").skipNulls().join(memberIds);
                     msgValues.put("member_ids", memberIdString);
                     msgValues.put("member_names", Joiner.on(",").skipNulls().join(memberNames));
+                    msgValues.put("members_count", membersArray.length());
 
                     if (messageObj.getString("album_ids") != null && !messageObj.getString("album_ids").equalsIgnoreCase("null")) {
                         JSONArray albumArray = messageObj.getJSONArray("album_ids");

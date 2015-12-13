@@ -80,7 +80,9 @@
 
         <activity android:name=".MessageViewActivity" />
 
-        <activity android:name=".MessageChatViewActivity" />
+        <activity
+            android:name=".MessageChatViewActivity"
+            android:configChanges="keyboard|keyboardHidden" />
 
         <activity android:name=".CustomGalleryActivity">
             <intent-filter>

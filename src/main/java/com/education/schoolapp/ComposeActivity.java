@@ -253,11 +253,11 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
                 return;
             }
         }
-        String textTitle = mTitleView.getText().toString();
+       /* String textTitle = mTitleView.getText().toString();
         if (textTitle.isEmpty()) {
             mTitleView.setFocusable(true);
             return;
-        }
+        }*/
         String textDesc = mDescView.getText().toString();
         if (textDesc.isEmpty()) {
             mDescView.setFocusable(true);
@@ -298,7 +298,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
         JSONObject compJsonObj = new JSONObject();
         JSONObject msgJsonObj = new JSONObject();
         try {
-            compJsonObj.put("subject", textTitle);
+            compJsonObj.put("subject", textDesc);
             compJsonObj.put("body", textDesc);
             compJsonObj.put("message_type", mType);
             compJsonObj.put("sender_id", mLoginName);
@@ -352,7 +352,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
                     try {
                         JSONObject respObj = new JSONObject(networkResult);
 
-                        msgRespValues.put("message_id", respObj.getString("$oid"));
+                        msgRespValues.put("message_id", respObj.getJSONObject("_id").getString("$oid"));
                         msgRespValues.put("status", 1);
                     } catch (JSONException e) {
                         e.printStackTrace();

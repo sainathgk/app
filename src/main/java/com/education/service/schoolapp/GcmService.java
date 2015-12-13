@@ -117,6 +117,7 @@ public class GcmService extends GcmListenerService {
                     String memberIdString = Joiner.on(",").skipNulls().join(memberIds);
                     msgValues.put("member_ids", memberIdString);
                     msgValues.put("member_names", Joiner.on(",").skipNulls().join(memberNames));
+                    msgValues.put("members_count", membersArray.length());
 
                     if (messageObj.getString("album_ids") != null && !messageObj.getString("album_ids").equalsIgnoreCase("null")) {
                         JSONArray albumArray = messageObj.getJSONArray("album_ids");
@@ -136,6 +137,7 @@ public class GcmService extends GcmListenerService {
                     msgValues.put("sender_name", messageObj.getString("sender_name"));
 
                     getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
+                    getContentResolver().notifyChange(Uri.parse("content://com.education.schoolapp/received_messages_all"), null);
 
                     ContentValues msgIdUpdate = new ContentValues();
                     String selection = " message_id like '" + messageObj.getJSONObject("_id").getString("$oid") + "'";
@@ -145,8 +147,9 @@ public class GcmService extends GcmListenerService {
 
                     SharedPreferences sharePrefs = getApplicationContext().getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
 
-                    if (sharePrefs.getBoolean(SHARED_MSG_VIEW, true)) {
+                    if (!sharePrefs.getBoolean(SHARED_MSG_VIEW, true)) {
                         Intent notiIntent = new Intent(getApplicationContext(), HomeMainActivity.class);
+                        notiIntent.putExtra("message_type", msgValues.getAsInteger("message_type"));
 
                         PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notiIntent,
                                 PendingIntent.FLAG_UPDATE_CURRENT);
