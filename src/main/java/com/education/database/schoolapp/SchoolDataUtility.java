@@ -57,7 +57,7 @@ public class SchoolDataUtility {
 */
 
         //String selection = " member_ids like '%" + mLoginName + "%' and message_type = 1 GROUP BY member_ids ";
-        String selection = " message_type = 1 GROUP BY group_id ";
+        String selection = " message_type = 1 or message_type = 4 GROUP BY group_id ";
 
         msgCursor = context.getContentResolver().query(Uri.parse("content://com.education.schoolapp/received_messages_all"),
                 messageProjection, selection, null, "start_date DESC");
@@ -76,11 +76,16 @@ public class SchoolDataUtility {
                     membersArray.add("You");
                 }
 
+                String sender_name = msgCursor.getString(msgCursor.getColumnIndex("sender_name"));
+                if (sender_name != null && sender_name.equalsIgnoreCase(currUserName)) {
+                    sender_name = "You";
+                }
+
                 msgItem.msgFrom = TextUtils.join(",", membersArray);
                 msgItem.msgFromId = msgCursor.getString(msgCursor.getColumnIndex("sender_id"));
                 msgItem.msgGroupId = msgCursor.getString(msgCursor.getColumnIndex("group_id"));
                 msgItem.msgTo = msgCursor.getString(msgCursor.getColumnIndex("member_ids"));
-                msgItem.msgTitle = msgCursor.getString(msgCursor.getColumnIndex("subject"));
+                msgItem.msgTitle = sender_name + " : " + msgCursor.getString(msgCursor.getColumnIndex("subject"));
                 msgItem.msgDescription = msgCursor.getString(msgCursor.getColumnIndex("body"));
                 msgItem.msgDate = msgCursor.getString(msgCursor.getColumnIndex("start_date"));
                 /*msgItem.msgAttachment = (msgCursor.getString(msgCursor.getColumnIndex("msg_attachment_path")) != null) ? true : false;*/
@@ -194,11 +199,11 @@ public class SchoolDataUtility {
 
     public ArrayList<MessageItem> getChatMessages(Context context, String sender) {
         String[] messageProjection = {"message_id", "member_ids", "subject", "body", "start_date", "sender_id", "sender_name",
-                "sender_profile_image", "read_status", "group_id"};
+                "sender_profile_image", "read_status", "group_id", "image_local_path", "image_name", "message_type"};
         ArrayList<MessageItem> msgArray = null;
         Cursor msgCursor = null;
 
-        String selection = " message_type = 1 and group_id like '" + sender + "'";
+        String selection = " group_id like '" + sender + "'";
 
         msgCursor = context.getContentResolver().query(Uri.parse("content://com.education.schoolapp/received_messages_all"),
                 messageProjection, selection, null, "start_date ASC");
@@ -219,6 +224,9 @@ public class SchoolDataUtility {
                 /*msgItem.msgAttachment = (msgCursor.getString(msgCursor.getColumnIndex("msg_attachment_path")) != null) ? true : false;*/
                 msgItem.msgReadStatus = msgCursor.getShort(msgCursor.getColumnIndex("read_status"));
                 msgItem.msgFromImage = msgCursor.getBlob(msgCursor.getColumnIndex("sender_profile_image"));
+                msgItem.msgType = msgCursor.getInt(msgCursor.getColumnIndex("message_type"));
+                msgItem.msgImagePath = msgCursor.getString(msgCursor.getColumnIndex("image_local_path"));
+                msgItem.msgImageName = msgCursor.getString(msgCursor.getColumnIndex("image_name"));
 
                 msgArray.add(msgItem);
             }

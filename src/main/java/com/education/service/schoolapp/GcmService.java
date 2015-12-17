@@ -118,6 +118,8 @@ public class GcmService extends GcmListenerService {
                     msgValues.put("member_ids", memberIdString);
                     msgValues.put("member_names", Joiner.on(",").skipNulls().join(memberNames));
                     msgValues.put("members_count", membersArray.length());
+                    msgValues.put("sender_profile_image", Base64.decode(messageObj.getString("sender_profile_image"), 0));
+                    msgValues.put("sender_name", messageObj.getString("sender_name"));
 
                     if (messageObj.getString("album_ids") != null && !messageObj.getString("album_ids").equalsIgnoreCase("null")) {
                         JSONArray albumArray = messageObj.getJSONArray("album_ids");
@@ -129,12 +131,11 @@ public class GcmService extends GcmListenerService {
                                 mAlbumIdx++;*/
                                 networkConn.getAlbum(albumIds[i]);
                             }
-                            msgValues.put("album_ids", Joiner.on(",").skipNulls().join(albumIds));
+                            msgValues.put("album_id", Joiner.on(",").skipNulls().join(albumIds));
                         }
                     }
 
-                    msgValues.put("sender_profile_image", Base64.decode(messageObj.getString("sender_profile_image"), 0));
-                    msgValues.put("sender_name", messageObj.getString("sender_name"));
+                    //TODO - album insert to Messages table yet to be done similar to Home main activity.
 
                     getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
                     getContentResolver().notifyChange(Uri.parse("content://com.education.schoolapp/received_messages_all"), null);

@@ -8,8 +8,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.ContentObserver;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
@@ -34,6 +36,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -68,6 +75,9 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
     private String mLoginType = "";
     private SchoolDataUtility mSchoolDataUtility;
     private String currUserName;
+    private File mAppDir;
+    private String mAlbumId;
+    private ImageButton mAttachBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +115,9 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
         mComposeSendBtn = (ImageButton) findViewById(R.id.sendMessageButton);
         mComposeSendBtn.setOnClickListener(this);
 
+        mAttachBtn = (ImageButton) findViewById(R.id.attachmentButton);
+        mAttachBtn.setOnClickListener(this);
+
         mComposeEdit = (EditText) findViewById(R.id.message);
 
         progress = new ProgressDialog(this);
@@ -140,6 +153,20 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
         SharedPreferences sharePrefs = getApplicationContext().getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
 
         editor = sharePrefs.edit();
+
+        // Find the SD Card path
+        File filepath = Environment.getExternalStorageDirectory();
+
+        // Create a new folder in SD Card
+        mAppDir = new File(filepath.getAbsolutePath() + "/" + getResources().getString(R.string.app_name));
+        if (!mAppDir.exists()) {
+            mAppDir.mkdirs();
+        }
+
+        networkConn = new NetworkConnectionUtility();
+
+        NetworkResp networkResp = new NetworkResp();
+        networkConn.setNetworkListener(networkResp);
     }
 
     @Override
@@ -185,19 +212,14 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
                 return;
             }
 
-            handleSendMessage(composeText);
+            handleSendMessage(composeText, null, 1);
         } else if (v.getId() == R.id.attachmentButton) {
             selectImage();
         }
     }
 
-    private void handleSendMessage(String message) {
+    private void handleSendMessage(String message, String album_id, int messageType) {
         progress.show();
-
-        networkConn = new NetworkConnectionUtility();
-
-        NetworkResp networkResp = new NetworkResp();
-        networkConn.setNetworkListener(networkResp);
 
         JSONArray toSenderIds;
         if (mTextTo != null && !mTextTo.isEmpty()) {
@@ -229,7 +251,7 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
         try {
             compJsonObj.put("subject", message);
             compJsonObj.put("body", message);
-            compJsonObj.put("message_type", 1);
+            compJsonObj.put("message_type", messageType);
             compJsonObj.put("sender_id", mLoginName);
             compJsonObj.put("sender_name", currUserName);
             compJsonObj.put("sender_profile_image", Base64.encodeToString(mSchoolDataUtility.getMemberProfilePic(this), 0));
@@ -277,7 +299,12 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
 
             msgValues.put("member_names", TextUtils.join(",", memberStringArray));
 
-            getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
+            if (messageType == 1) {
+                getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
+            } else if (messageType == 4) {
+                String selection = "album_id like '" + album_id + "'";
+                getContentResolver().update(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues, selection, null);
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -321,6 +348,39 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
                     mChatList.invalidate();
                     mChatList.scrollToPosition(mChatListAdapter.getItemCount() - 1);
                 }
+            } else if (urlString.equalsIgnoreCase(NetworkConstants.CREATE_ALBUM)) {
+                if (networkResult == null) {
+                    progress.dismiss();
+                    return;
+                }
+
+                try {
+                    JSONObject albumResp = new JSONObject(networkResult);
+
+                    JSONArray imageArray = albumResp.getJSONArray("multimediums");
+                    for (int i = 0; i < imageArray.length(); i++) {
+                        ContentValues albumValues = new ContentValues();
+                        String selection = " image_name like '" + imageArray.getJSONObject(i).getString("name") + "'";
+
+                        albumValues.put("album_name", albumResp.getString("name"));
+                        mAlbumId = albumResp.getJSONObject("_id").getString("$oid");
+                        albumValues.put("album_id", mAlbumId);
+                        albumValues.put("status", 1);
+                        albumValues.put("image_id", imageArray.getJSONObject(i).getJSONObject("_id").getString("$oid"));
+
+                        getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                                albumValues, selection, null);
+
+                        getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL),
+                                albumValues, selection, null);
+                    }
+
+                    handleSendMessage("Image", mAlbumId, 4);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                progress.dismiss();
+
             }
         }
     }
@@ -367,10 +427,76 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
 
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == SELECT_FILE) {
-                //onSelectFromGalleryResult(data);
+                onSelectFromGalleryResult(data);
             } else if (requestCode == REQUEST_CAMERA) {
-                //onCaptureImageResult(data);
+                onCaptureImageResult(data);
             }
         }
+    }
+
+    private void onCaptureImageResult(Intent data) {
+        Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        thumbnail.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
+
+        String fileName = System.currentTimeMillis() + ".jpg";
+        File destination = new File(mAppDir, fileName);
+
+        FileOutputStream fo;
+        try {
+            destination.createNewFile();
+            fo = new FileOutputStream(destination);
+            fo.write(bytes.toByteArray());
+            fo.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        ContentValues imgValues = new ContentValues();
+        imgValues.put("image_local_path", destination.toString());
+        imgValues.put("image_date", HomeMainActivity.getDateString(System.currentTimeMillis()));
+        imgValues.put("image_name", fileName);
+        imgValues.put("type", "sent");
+
+        getContentResolver().insert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES), imgValues);
+
+        getContentResolver().insert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL), imgValues);
+
+        createAlbumInServer(randomString(6));
+    }
+
+    private void onSelectFromGalleryResult(Intent data) {
+        createAlbumInServer(randomString(6));
+    }
+
+    static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    static Random rnd = new Random();
+
+    private String randomString(int len) {
+        StringBuilder sb = new StringBuilder(len);
+        for (int i = 0; i < len; i++)
+            sb.append(AB.charAt(rnd.nextInt(AB.length())));
+        return sb.toString();
+    }
+
+    private void createAlbumInServer(String albumName) {
+        JSONObject albumJsonObj = new JSONObject();
+        JSONObject albumObj = new JSONObject();
+        progress.setTitle(R.string.album_upload_progress);
+        progress.show();
+        try {
+            albumJsonObj.put("name", albumName);
+            albumJsonObj.put("date", HomeMainActivity.getDateString(System.currentTimeMillis()));
+            albumJsonObj.put("image_data_arr", new SchoolDataUtility().getPendingImagesForAlbum(this));
+            albumJsonObj.put("member_id", mLoginName);
+
+            albumObj.put("album", albumJsonObj);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        networkConn.createAlbum(albumObj.toString());
     }
 }

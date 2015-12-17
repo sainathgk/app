@@ -131,6 +131,7 @@ public class HomeMainActivity extends AppCompatActivity
     private ArrayList<String> mAlbumIds = new ArrayList<String>();
     private int mAlbumIdx = 0;
     private ArrayList<String> mSelectedStudentsArray;
+    private HashMap<String, ContentValues> mAlbumMessageMap = new HashMap<String, ContentValues>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -753,6 +754,9 @@ public class HomeMainActivity extends AppCompatActivity
                     getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
                             imgValues, selection, null);
 
+                    getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL),
+                            imgValues, selection, null);
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -831,6 +835,9 @@ public class HomeMainActivity extends AppCompatActivity
                     msgValues.put("member_names", Joiner.on(",").skipNulls().join(memberNames));
                     msgValues.put("members_count", membersArray.length());
 
+                    msgValues.put("sender_profile_image", Base64.decode(messageObj.getString("sender_profile_image"), 0));
+                    msgValues.put("sender_name", messageObj.getString("sender_name"));
+
                     if (messageObj.getString("album_ids") != null && !messageObj.getString("album_ids").equalsIgnoreCase("null")) {
                         JSONArray albumArray = messageObj.getJSONArray("album_ids");
                         if (albumArray != null) {
@@ -839,15 +846,17 @@ public class HomeMainActivity extends AppCompatActivity
                                 albumIds[i] = albumArray.getString(i);
                                 mAlbumIds.add(mAlbumIdx, albumArray.getString(i));
                                 mAlbumIdx++;
+                                mAlbumMessageMap.put(albumIds[i], msgValues);
                             }
-                            msgValues.put("album_ids", Joiner.on(",").skipNulls().join(albumIds));
+                            msgValues.put("album_id", Joiner.on(",").skipNulls().join(albumIds));
                         }
                     }
-                    msgValues.put("sender_profile_image", Base64.decode(messageObj.getString("sender_profile_image"), 0));
-                    msgValues.put("sender_name", messageObj.getString("sender_name"));
 
-                    getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
-
+                    if (!msgValues.containsKey("album_id")) {
+                        getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
+                    } else {
+                        Log.i("Sainath", "Album id is present");
+                    }
                     ContentValues msgIdUpdate = new ContentValues();
                     String selection = " message_id like '" + messageObj.getJSONObject("_id").getString("$oid") + "'";
                     msgIdUpdate.put("status", 1);
@@ -894,10 +903,17 @@ public class HomeMainActivity extends AppCompatActivity
                                 albumValues[albIdx].put("type", "Received");
                                 albumName = albumObj.getString("name");
                                 albumValues[albIdx].put("album_name", albumName);
-                                albumValues[albIdx].put("album_id", albumObj.getJSONObject("_id").getString("$oid"));
+                                String albumId = albumObj.getJSONObject("_id").getString("$oid");
+                                albumValues[albIdx].put("album_id", albumId);
                                 albumValues[albIdx].put("image_id", albumArray.getJSONObject(albIdx).getJSONObject("_id").getString("$oid"));
+
+                                ContentValues msgValues = mAlbumMessageMap.get(albumId);
+
+                                albumValues[albIdx].putAll(msgValues);
                             }
                             getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES), albumValues);
+
+                            getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL), albumValues);
                         }
                     }
                 } catch (JSONException e) {

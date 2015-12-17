@@ -163,6 +163,11 @@ public class CustomGalleryActivity extends Activity {
 
             getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES), imageValues);
 
+            for (int i = 0; i < imageValues.length; i++) {
+                imageValues[i].put("message_type", 4);
+            }
+            getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL), imageValues);
+
             Intent data = new Intent().putExtra("all_path", allPath);
             setResult(RESULT_OK, data);
             finish();

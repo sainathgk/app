@@ -21,6 +21,9 @@ public class MessageItem {
     public String msgId;
     public String msgMembers;
     public String msgGroupId;
+    public int msgType;
+    public String msgImagePath;
+    public String msgImageName;
 
     public String toString() {
         JSONObject msgJson = new JSONObject();

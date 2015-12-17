@@ -57,12 +57,13 @@ public class SchoolDataConstants {
             "sender_id TEXT NOT NULL, sender_name TEXT, sender_profile_image BLOB, member_ids TEXT NOT NULL, member_names TEXT NOT NULL, message_type INTEGER, start_date TEXT, end_date TEXT, " +
             "message_id TEXT, local_msg_id INTEGER, status INTEGER DEFAULT 0); ";
 
-    public final static String CREATE_RECEIVED_MESSAGES_ALL = CREATE_TABLE + RECEIVED_MESSAGES_ALL + " (subject TEXT NOT NULL, body TEXT NOT NULL, members_count INTEGER DEFAULT 1, " +
-            "sender_id TEXT NOT NULL, sender_name TEXT, sender_profile_image BLOB, member_ids TEXT NOT NULL, member_names TEXT, message_type INTEGER, start_date TEXT, end_date TEXT, " +
-            "message_id TEXT UNIQUE, album_ids TEXT, group_id TEXT, saved INTEGER DEFAULT 0, read_status INTEGER DEFAULT 1, local_msg_id INTEGER, status INTEGER DEFAULT 0); " ;
+    public final static String CREATE_RECEIVED_MESSAGES_ALL = CREATE_TABLE + RECEIVED_MESSAGES_ALL + " (subject TEXT, body TEXT, members_count INTEGER DEFAULT 1, " +
+            "sender_id TEXT, sender_name TEXT, sender_profile_image BLOB, member_ids TEXT, member_names TEXT, message_type INTEGER, start_date TEXT, end_date TEXT, " +
+            "message_id TEXT, album_id TEXT, album_name TEXT, image_id TEXT UNIQUE, image_name TEXT, image_local_path TEXT, type TEXT, image_date TEXT, " +
+            "group_id TEXT, saved INTEGER DEFAULT 0, read_status INTEGER DEFAULT 1, local_msg_id INTEGER, status INTEGER DEFAULT 0); ";
 
     public final static String CREATE_ALBUM_IMAGES = CREATE_TABLE + ALBUM_IMAGES + " (image_local_path TEXT, image_name TEXT, " +
-            "image_date TEXT, album_name TEXT, album_id TEXT, image_id TEXT UNIQUE, member_ids TEXT, status INTEGER DEFAULT 0, " +
+            "image_date TEXT, album_name TEXT, album_id TEXT, image_id TEXT, member_ids TEXT, status INTEGER DEFAULT 0, " +
             "type TEXT ); ";
 
     public final static String CREATE_ALBUM_DETAILS = CREATE_TABLE + ALBUM_DETAILS + " (album_name TEXT NOT NULL, album_date TEXT NOT NULL, " +
@@ -76,7 +77,8 @@ public class SchoolDataConstants {
      *  RECEIVED - 1
      *  FAILED - 2
      */
-    /** Message Type
+    /**
+     * Message Type
      * 1 - Plain Message
      * 2 - Notification
      * 3 - Multimedia
