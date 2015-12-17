@@ -27,6 +27,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+
 /**
  * Created by Sainath on 08-11-2015.
  */
@@ -36,6 +38,7 @@ public class GcmService extends GcmListenerService {
     private NetworkConnectionUtility networkConn;
     private static final String SHARED_MSG_VIEW = "schoolChatMsgView";
     private static final String APP_SHARED_PREFS = "school_preferences";
+    private HashMap<String, ContentValues> mAlbumMessageMap = new HashMap<String, ContentValues>();
 
     public GcmService() {
         super();
@@ -129,6 +132,8 @@ public class GcmService extends GcmListenerService {
                                 albumIds[i] = albumArray.getString(i);
                                 /*mAlbumIds.add( mAlbumIdx, albumArray.getString(i));
                                 mAlbumIdx++;*/
+                                mAlbumMessageMap.put(albumIds[i], msgValues);
+
                                 networkConn.getAlbum(albumIds[i]);
                             }
                             msgValues.put("album_id", Joiner.on(",").skipNulls().join(albumIds));
@@ -137,7 +142,12 @@ public class GcmService extends GcmListenerService {
 
                     //TODO - album insert to Messages table yet to be done similar to Home main activity.
 
-                    getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
+                    if (!msgValues.containsKey("album_id")) {
+                        getContentResolver().insert(Uri.parse("content://com.education.schoolapp/received_messages_all"), msgValues);
+                    } else {
+                        Log.i("Sainath", "Album id is present");
+                    }
+
                     getContentResolver().notifyChange(Uri.parse("content://com.education.schoolapp/received_messages_all"), null);
 
                     ContentValues msgIdUpdate = new ContentValues();
@@ -189,10 +199,17 @@ public class GcmService extends GcmListenerService {
                                 albumValues[albIdx].put("type", "Received");
                                 albumName = albumObj.getString("name");
                                 albumValues[albIdx].put("album_name", albumName);
-                                albumValues[albIdx].put("album_id", albumObj.getJSONObject("_id").getString("$oid"));
+                                String albumId = albumObj.getJSONObject("_id").getString("$oid");
+                                albumValues[albIdx].put("album_id", albumId);
                                 albumValues[albIdx].put("image_id", albumArray.getJSONObject(albIdx).getJSONObject("_id").getString("$oid"));
+
+                                ContentValues msgValues = mAlbumMessageMap.get(albumId);
+
+                                albumValues[albIdx].putAll(msgValues);
                             }
                             getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES), albumValues);
+
+                            getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL), albumValues);
 
                             /*albumMsgUpdate.put("read_status", 0);
                             String selection = " album_name like '" + albumName + "'";
