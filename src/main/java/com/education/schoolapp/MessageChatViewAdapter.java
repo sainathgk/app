@@ -186,7 +186,7 @@ public class MessageChatViewAdapter extends RecyclerView.Adapter<MessageChatView
 
         holder.mMsgFrom.setText(msgData.get(position).msgFrom);
         holder.mMsgTitle.setText(msgData.get(position).msgTitle);
-        holder.mMsgTimeStamp.setText(msgData.get(position).msgDate);
+        holder.mMsgTimeStamp.setText(HomeMainActivity.getDateString(msgData.get(position).msgDate));
         byte[] senderImageBlob = msgData.get(position).msgFromImage;
         if (senderImageBlob != null) {
             holder.mSenderImage.setImageBitmap(HomeMainActivity.GetBitmapClippedCircle(BitmapFactory.decodeByteArray(senderImageBlob, 0, senderImageBlob.length)));

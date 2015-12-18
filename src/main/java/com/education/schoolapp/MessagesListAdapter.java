@@ -162,7 +162,7 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessagesListAdapte
         }
 */
         holder.mMsgDescription.setText(msgData.get(position).msgTitle);
-        holder.mMsgTimeStamp.setText(msgData.get(position).msgDate);
+        holder.mMsgTimeStamp.setText(HomeMainActivity.getDateString(msgData.get(position).msgDate));
         if (msgData.get(position).msgReadStatus == 1) {
             holder.mMsgTitle.setTypeface(null, Typeface.BOLD);
             holder.mMsgDescription.setTypeface(null, Typeface.BOLD);

@@ -157,7 +157,9 @@ public class CustomGalleryActivity extends Activity {
                 imageValues[i] = new ContentValues();
                 imageValues[i].put("image_local_path", allPath[i]);
                 imageValues[i].put("image_name", selected.get(i).imgName);
-                imageValues[i].put("image_date", HomeMainActivity.getDateString(System.currentTimeMillis()));
+                Long timeInMS = System.currentTimeMillis();
+                imageValues[i].put("image_date", HomeMainActivity.getDateInString(timeInMS));
+                imageValues[i].put("image_time", HomeMainActivity.getTimeInString(timeInMS));
                 imageValues[i].put("type", "sent");
             }
 

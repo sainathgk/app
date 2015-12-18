@@ -97,7 +97,8 @@
                         android:layout_marginLeft="5dp"
                         android:layout_marginRight="5dp"
                         android:singleLine="true"
-                        android:text="30-Nov"
+                        android:maxLength="6"
+                        android:text="30-Nov-2015"
                         android:textAlignment="viewEnd"
                         android:textAppearance="?android:attr/textAppearanceSmall"
                         android:textSize="14sp" />

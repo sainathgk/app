@@ -64,13 +64,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.TimeZone;
 
 public class HomeMainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -385,14 +388,21 @@ public class HomeMainActivity extends AppCompatActivity
 
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
 
+        dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+
         Calendar calendar = Calendar.getInstance();
         try {
-            Long mLongTime = Long.parseLong(timeMilliSeconds);
+            Date date = dateFormatter.parse(timeMilliSeconds);
+            Long mLongTime = date.getTime();
             calendar.setTimeInMillis(mLongTime);
         } catch (NumberFormatException e) {
             e.printStackTrace();
             return "";
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return "";
         }
+        dateFormatter.setTimeZone(TimeZone.getDefault());
 
         return dateFormatter.format(calendar.getTime());
     }
@@ -401,6 +411,35 @@ public class HomeMainActivity extends AppCompatActivity
         //TODO - To be changed once the server side is changed
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
         //SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+
+        dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Calendar calendar = Calendar.getInstance();
+        try {
+            calendar.setTimeInMillis(timeMilliSeconds);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            return "";
+        }
+
+        return dateFormatter.format(calendar.getTime());
+    }
+
+    public static String getDateInString(Long timeMilliSeconds) {
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy");
+
+        Calendar calendar = Calendar.getInstance();
+        try {
+            calendar.setTimeInMillis(timeMilliSeconds);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            return "";
+        }
+
+        return dateFormatter.format(calendar.getTime());
+    }
+
+    public static String getTimeInString(Long timeMilliSeconds) {
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("hh:mm a");
 
         Calendar calendar = Calendar.getInstance();
         try {
@@ -657,7 +696,8 @@ public class HomeMainActivity extends AppCompatActivity
         for (int i = 0; i < mViewPager.getAdapter().getCount(); i++) {
             Fragment fragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(i));
             if (i == 2) {
-                ((AlbumFragment) fragment).updateAlbum(getApplicationContext());
+                //((AlbumFragment) fragment).updateAlbum(getApplicationContext());
+                ((AlbumFragment) fragment).updateFolder(getApplicationContext());
             } else {
                 ((MessagesFragment) fragment).updateMessages();
             }
@@ -967,6 +1007,7 @@ public class HomeMainActivity extends AppCompatActivity
 
     }
 
+
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
      * one of the sections/tabs/pages.
@@ -1068,7 +1109,9 @@ public class HomeMainActivity extends AppCompatActivity
 
         ContentValues imgValues = new ContentValues();
         imgValues.put("image_local_path", destination.toString());
-        imgValues.put("image_date", HomeMainActivity.getDateString(System.currentTimeMillis()));
+        Long timeInMS = System.currentTimeMillis();
+        imgValues.put("image_date", HomeMainActivity.getDateInString(timeInMS));
+        imgValues.put("image_time", HomeMainActivity.getTimeInString(timeInMS));
         imgValues.put("image_name", fileName);
         imgValues.put("type", "sent");
 

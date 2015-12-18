@@ -456,7 +456,9 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
 
         ContentValues imgValues = new ContentValues();
         imgValues.put("image_local_path", destination.toString());
-        imgValues.put("image_date", HomeMainActivity.getDateString(System.currentTimeMillis()));
+        Long timeInMS = System.currentTimeMillis();
+        imgValues.put("image_date", HomeMainActivity.getDateInString(timeInMS));
+        imgValues.put("image_time", HomeMainActivity.getTimeInString(timeInMS));
         imgValues.put("image_name", fileName);
         imgValues.put("type", "sent");
 

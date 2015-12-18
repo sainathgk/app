@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,6 +58,8 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
 
     GalleryAdapter adapter;
     ImageLoader imageLoader;
+    private AlbumFolderAdapter mFolderAdapter;
+    private boolean isImagesViewed = false;
 
     // TODO: Rename and change types of parameters
     public static AlbumFragment newInstance(String param1, String param2, boolean param3) {
@@ -94,6 +97,9 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
 
         adapter = new GalleryAdapter(this.getContext(), imageLoader);
         adapter.setMultiplePick(false);
+
+        mFolderAdapter = new AlbumFolderAdapter(this.getContext());
+        mFolderAdapter.setData();
     }
 
 
@@ -122,7 +128,8 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
-        ((AdapterView<ListAdapter>) mListView).setAdapter(adapter);
+        //((AdapterView<ListAdapter>) mListView).setAdapter(adapter);
+        ((AdapterView<ListAdapter>) mListView).setAdapter(mFolderAdapter);
 
         return view;
     }
@@ -130,19 +137,60 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
     @Override
     public void onResume() {
         super.onResume();
-        if (mParam3) {
-            adapter.addAll(new SchoolDataUtility().getUpdatedImages(this.getActivity().getApplicationContext(), "Sent"));
-        } else {
-            adapter.addAll(new SchoolDataUtility().getUpdatedImages(this.getActivity().getApplicationContext(), "Received"));
+        if (adapter != null) {
+            if (mParam3) {
+                adapter.addAll(new SchoolDataUtility().getUpdatedImages(this.getActivity().getApplicationContext(), "Sent"));
+            } else {
+                adapter.addAll(new SchoolDataUtility().getUpdatedImages(this.getActivity().getApplicationContext(), "Received"));
+            }
+            adapter.notifyDataSetChanged();
         }
-        adapter.notifyDataSetChanged();
+        if (mFolderAdapter != null) {
+            mFolderAdapter.setData();
+            mFolderAdapter.notifyDataSetChanged();
+        }
         mListView.invalidate();
+
+        View view = getView();
+        if (view != null) {
+            view.setFocusableInTouchMode(true);
+            view.requestFocus();
+            view.setOnKeyListener(new View.OnKeyListener() {
+                @Override
+                public boolean onKey(View v, int keyCode, KeyEvent event) {
+                    if (keyCode == KeyEvent.KEYCODE_BACK) {
+                        if (isImagesViewed) {
+                            isImagesViewed = false;
+
+                            if (mListView != null) {
+                                ((AdapterView<ListAdapter>) mListView).setAdapter(mFolderAdapter);
+                                mListView.invalidate();
+                            }
+                            return true;
+                        }
+                        return false;
+                    }
+
+                    return false;
+                }
+            });
+        }
     }
 
     public void updateAlbum(Context context) {
         if (adapter != null) {
             adapter.addAll(new SchoolDataUtility().getUpdatedImages(context, "Received"));
             adapter.notifyDataSetChanged();
+        }
+        if (mListView != null) {
+            mListView.invalidate();
+        }
+    }
+
+    public void updateFolder(Context context) {
+        if (mFolderAdapter != null) {
+            mFolderAdapter.setData();
+            mFolderAdapter.notifyDataSetChanged();
         }
         if (mListView != null) {
             mListView.invalidate();
@@ -173,7 +221,26 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
             // fragment is attached to one) that an item has been selected.
             mListener.onFragmentInteraction(DummyContent.ITEMS.get(position).id);
         }*/
+
+        if (mFolderAdapter != null) {
+            FolderDetails albumFolder = mFolderAdapter.getItem(position);
+            String albumId = albumFolder.albumId;
+
+            if (adapter != null) {
+                adapter.addAll(new SchoolDataUtility().getAlbumImages(this.getActivity().getApplicationContext(), albumId));
+
+                adapter.notifyDataSetChanged();
+
+                isImagesViewed = true;
+
+                if (mListView != null) {
+                    ((AdapterView<ListAdapter>) mListView).setAdapter(adapter);
+                    mListView.invalidate();
+                }
+            }
+        }
     }
+
 
     /**
      * The default content for this Fragment has a TextView that is shown when

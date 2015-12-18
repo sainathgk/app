@@ -10,6 +10,7 @@ import android.util.Base64;
 
 import com.education.connection.schoolapp.JSONUtility;
 import com.education.schoolapp.CustomGallery;
+import com.education.schoolapp.FolderDetails;
 import com.education.schoolapp.R;
 
 import org.json.JSONArray;
@@ -782,6 +783,51 @@ public class SchoolDataUtility {
             pendImageCursor.close();
         }
         return pendImagesArray;
+    }
+
+    public ArrayList<FolderDetails> getAlbumsByDate(Context context) {
+        Cursor albumsCursor = null;
+        String[] projection = {"album_id", "album_name", "image_date"};
+        String selection = " type like 'Received' or type like 'Sent' GROUP BY image_date ";
+
+        ArrayList<FolderDetails> albumFolderArray = new ArrayList<FolderDetails>();
+
+        albumsCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                projection, selection, null, " image_date DESC");
+
+        if (albumsCursor != null && albumsCursor.getCount() > 0) {
+            while (albumsCursor.moveToNext()) {
+                FolderDetails albumFolder = new FolderDetails();
+                albumFolder.albumId = albumsCursor.getString(albumsCursor.getColumnIndex("album_id"));
+                albumFolder.albumName = albumsCursor.getString(albumsCursor.getColumnIndex("album_name"));
+                albumFolder.albumDate = albumsCursor.getString(albumsCursor.getColumnIndex("image_date"));
+
+                albumFolderArray.add(albumFolder);
+            }
+        }
+
+        return albumFolderArray;
+    }
+
+    public ArrayList<CustomGallery> getAlbumImages(Context context, String albumId) {
+        ArrayList<CustomGallery> galleryList = new ArrayList<CustomGallery>();
+        Cursor imgCursor = null;
+        String[] projection = {"image_local_path", "status"};
+        String selection = " album_id like '" + albumId + "'";
+
+        imgCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                projection, selection, null, null);
+
+        if (imgCursor != null && imgCursor.getCount() > 0) {
+            while (imgCursor.moveToNext()) {
+                CustomGallery item = new CustomGallery();
+                item.sdcardPath = imgCursor.getString(imgCursor.getColumnIndex("image_local_path"));
+                item.syncState = imgCursor.getInt(imgCursor.getColumnIndex("status"));
+                galleryList.add(item);
+            }
+            imgCursor.close();
+        }
+        return galleryList;
     }
 
     private String getSelectedImageString(String selectedImagePath) {
