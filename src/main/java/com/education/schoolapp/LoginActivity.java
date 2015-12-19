@@ -21,6 +21,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.education.connection.schoolapp.JSONUtility;
@@ -79,6 +80,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private int mAlbumIdx = 0;
     private String[] toSectionArray;
     private HashMap<String, ContentValues> mAlbumMessageMap = new HashMap<String, ContentValues>();
+    private TextView mErrorTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +90,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         mUserNameView = (EditText) findViewById(R.id.user_id);
         mPasswordView = (EditText) findViewById(R.id.password);
+        mErrorTextView = (TextView) findViewById(R.id.error_text);
 
         Button mLoginButton = (Button) findViewById(R.id.login_button);
         mLoginButton.setOnClickListener(this);
@@ -144,8 +147,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 if (networkResult == null) {
                     progress.setTitle(R.string.login_failed);
                     progress.dismiss();
+                    mErrorTextView.setText("! Login Failed");
+                    mErrorTextView.setVisibility(View.VISIBLE);
+                    getContentResolver().delete(Uri.parse("content://com.education.schoolapp/identity"), null, null);
                     return;
                 }
+                mErrorTextView.setVisibility(View.INVISIBLE);
                 int userType = -1;
                 JSONUtility jsonUtility = new JSONUtility();
                 String[] loginColumns = {"member_name", "dob", "age", "blood_group",
@@ -405,7 +412,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
                                 albumValues[albIdx].putAll(msgValues);
                             }
-                            getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES), albumValues);
+                            //TODO - To be checked again
+                            //getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES), albumValues);
 
                             getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL), albumValues);
 

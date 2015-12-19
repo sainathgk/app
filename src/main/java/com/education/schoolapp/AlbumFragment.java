@@ -224,7 +224,7 @@ public class AlbumFragment extends Fragment implements AbsListView.OnItemClickLi
 
         if (mFolderAdapter != null) {
             FolderDetails albumFolder = mFolderAdapter.getItem(position);
-            String albumId = albumFolder.albumId;
+            String albumId = albumFolder.albumDate;
 
             if (adapter != null) {
                 adapter.addAll(new SchoolDataUtility().getAlbumImages(this.getActivity().getApplicationContext(), albumId));

@@ -641,6 +641,7 @@ public class HomeMainActivity extends AppCompatActivity
         return sb.toString();
     }
 
+    //TODO - To send only the selected images not all the images in pending state.
     private void createAlbumInServer(String albumName) {
         JSONObject albumJsonObj = new JSONObject();
         JSONObject albumObj = new JSONObject();
@@ -951,7 +952,8 @@ public class HomeMainActivity extends AppCompatActivity
 
                                 albumValues[albIdx].putAll(msgValues);
                             }
-                            getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES), albumValues);
+                            //TODO - To be checked again
+                            //getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES), albumValues);
 
                             getContentResolver().bulkInsert(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL), albumValues);
                         }

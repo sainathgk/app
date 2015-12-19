@@ -773,7 +773,9 @@ public class SchoolDataUtility {
         String[] projection = {"image_id"};
         String selection = " type like 'Received' and status == 0";
 
-        pendImageCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+        /*pendImageCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                projection, selection, null, null);*/
+        pendImageCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL),
                 projection, selection, null, null);
 
         if (pendImageCursor != null && pendImageCursor.getCount() > 0) {
@@ -792,7 +794,9 @@ public class SchoolDataUtility {
 
         ArrayList<FolderDetails> albumFolderArray = new ArrayList<FolderDetails>();
 
-        albumsCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+        /*albumsCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                projection, selection, null, " image_date DESC");*/
+        albumsCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL),
                 projection, selection, null, " image_date DESC");
 
         if (albumsCursor != null && albumsCursor.getCount() > 0) {
@@ -813,9 +817,12 @@ public class SchoolDataUtility {
         ArrayList<CustomGallery> galleryList = new ArrayList<CustomGallery>();
         Cursor imgCursor = null;
         String[] projection = {"image_local_path", "status"};
-        String selection = " album_id like '" + albumId + "'";
+        /*String selection = " album_id like '" + albumId + "'";*/
+        String selection = " image_date like '" + albumId + "'";
 
-        imgCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+        /*imgCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                projection, selection, null, null);*/
+        imgCursor = context.getContentResolver().query(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL),
                 projection, selection, null, null);
 
         if (imgCursor != null && imgCursor.getCount() > 0) {
