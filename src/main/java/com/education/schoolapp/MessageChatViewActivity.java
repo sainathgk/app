@@ -7,13 +7,16 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.ContentObserver;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -79,6 +82,9 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
     private String mAlbumId;
     private ImageButton mAttachBtn;
 
+    private int mDownloadImagesLength;
+    private int mCurrentImg;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -141,6 +147,7 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
                 if (mChatList != null) {
                     mChatList.invalidate();
                 }
+                downloadImagesFromServer();
             }
         });
 
@@ -263,6 +270,9 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
                 compJsonObj.put("group_status", 2);
                 compJsonObj.put("group_id", mTextTo);
             }
+            if (messageType == 4) {
+                compJsonObj.put("album_ids", new JSONArray().put(mAlbumId));
+            }
             msgJsonObj.put("message", compJsonObj);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -381,6 +391,133 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
                 }
                 progress.dismiss();
 
+            } else if (urlString.startsWith(NetworkConstants.GET_MULTIMEDIA)) {
+                mCurrentImg++;
+                progress.setTitle(getString(R.string.multimedia_download_progress) + mCurrentImg + "/" + mDownloadImagesLength);
+
+                if (networkResult == null) {
+                    if (mCurrentImg == mDownloadImagesLength) {
+                        progress.dismiss();
+                        //updateFragments();
+                    }
+                    return;
+                }
+                try {
+                    JSONObject imageJsonObj = new JSONObject(networkResult);
+                    String imageName = imageJsonObj.getString("name");
+                    String imageString = imageJsonObj.getString("content");
+                    String imagePath = saveImageToGallery(imageString, imageName);
+                    String imageId = imageJsonObj.getJSONObject("_id").getString("$oid");
+
+                    ContentValues imgValues = new ContentValues();
+                    String selection = " image_id like '" + imageId + "'";
+
+                    imgValues.put("image_local_path", imagePath);
+                    imgValues.put("image_name", imageName);
+                    String date = imageJsonObj.getString("date");
+                    imgValues.put("image_date", HomeMainActivity.getDateInString(date));
+                    imgValues.put("image_time", HomeMainActivity.getTimeInString(date));
+                    imgValues.put("status", 1);
+
+                    getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),
+                            imgValues, selection, null);
+
+                    getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.RECEIVED_MESSAGES_ALL),
+                            imgValues, selection, null);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                if (mCurrentImg == mDownloadImagesLength) {
+                    progress.dismiss();
+                    //updateFragments();
+                }
+            }
+        }
+    }
+
+    // Storage Permissions
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+
+    /**
+     * Checks if the app has permission to write to device storage
+     * <p/>
+     * If the app does not has permission then the user will be prompted to grant permissions
+     *
+     * @param activity
+     */
+    public static void verifyStoragePermissions(Activity activity) {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
+
+    private String saveImageToGallery(String imgString, String imgName) {
+        if (imgString == null) {
+            return "";
+        }
+        verifyStoragePermissions(this);
+        String imageName = imgName;
+        File imageFile = new File(mAppDir, imageName);
+        FileOutputStream output = null;
+        try {
+            byte[] imageBytes = Base64.decode(imgString, 0);
+
+            Bitmap imgBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+            if (imgBitmap == null) {
+                return "";
+            }
+
+            output = new FileOutputStream(imageFile);
+            // Compress into png format image from 0% - 100%
+            imgBitmap.compress(Bitmap.CompressFormat.JPEG, 100, output);
+            output.flush();
+            output.close();
+
+            //TODO - Check if the image is already saved in gallery & don't save again if exists.
+            String url = MediaStore.Images.Media.insertImage(getContentResolver(), imgBitmap,
+                    imageName, imageName);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Log.i("Album", "Image Path - " + imageFile.getAbsolutePath());
+
+        return imageFile.getAbsolutePath();
+    }
+
+    private void downloadImagesFromServer() {
+        JSONArray imagesIdArray = new SchoolDataUtility().getPendingImagesToDownload(this);
+        int imagesLength = imagesIdArray.length();
+        mDownloadImagesLength = imagesLength;
+        mCurrentImg = 0;
+
+        for (int i = 0; i < imagesLength; i++) {
+            try {
+                String imageId = imagesIdArray.getString(i);
+                Log.i("Network", "Download Image ID is " + imageId);
+                progress.setTitle(R.string.multimedia_download_progress);
+                progress.show();
+                networkConn.getMultimedia(imageId);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
     }

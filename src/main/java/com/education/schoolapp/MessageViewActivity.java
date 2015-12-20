@@ -78,7 +78,7 @@ public class MessageViewActivity extends AppCompatActivity {
                 mDescription = msgJsonObj.getString("body");
             }
             if (!msgJsonObj.optString("start_date").isEmpty()) {
-                mDate = msgJsonObj.getString("start_date");
+                mDate = HomeMainActivity.getDateString(msgJsonObj.getString("start_date"));
             }
             byte[] imageBytes = Base64.decode(msgJsonObj.getString("sender_profile_image"), 0);
             mSenderImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);

@@ -240,7 +240,8 @@ public class HomeMainActivity extends AppCompatActivity
                     }
                 }
                 if (position == 2) {
-                    fab.setImageResource(android.R.drawable.ic_menu_camera);
+                    fab.setVisibility(View.GONE);
+                    //fab.setImageResource(android.R.drawable.ic_menu_camera);
                     /*if (mIsTeacher) {
                         if (mUploadMenuItem != null) {
                             mUploadMenuItem.setVisible(true);
@@ -386,7 +387,9 @@ public class HomeMainActivity extends AppCompatActivity
         if (timeMilliSeconds == null || timeMilliSeconds.equalsIgnoreCase("null"))
             return "";
 
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
+        /*SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");*/
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        SimpleDateFormat dateFormatLocal = new SimpleDateFormat("dd-MMM-yyyy HH:mm a");
 
         dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 
@@ -402,15 +405,15 @@ public class HomeMainActivity extends AppCompatActivity
             e.printStackTrace();
             return "";
         }
-        dateFormatter.setTimeZone(TimeZone.getDefault());
+        dateFormatLocal.setTimeZone(TimeZone.getDefault());
 
-        return dateFormatter.format(calendar.getTime());
+        return dateFormatLocal.format(calendar.getTime());
     }
 
     public static String getDateString(Long timeMilliSeconds) {
         //TODO - To be changed once the server side is changed
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
-        //SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        //SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
         dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         Calendar calendar = Calendar.getInstance();
@@ -438,6 +441,29 @@ public class HomeMainActivity extends AppCompatActivity
         return dateFormatter.format(calendar.getTime());
     }
 
+    public static String getDateInString(String timeMilliSeconds) {
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat dateFormatLocal = new SimpleDateFormat("dd-MMM-yyyy");
+
+        dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        Calendar calendar = Calendar.getInstance();
+        try {
+            Date date = dateFormatter.parse(timeMilliSeconds);
+            Long mLongTime = date.getTime();
+            calendar.setTimeInMillis(mLongTime);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            return "";
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return "";
+        }
+        dateFormatLocal.setTimeZone(TimeZone.getDefault());
+
+        return dateFormatLocal.format(calendar.getTime());
+    }
+
     public static String getTimeInString(Long timeMilliSeconds) {
         SimpleDateFormat dateFormatter = new SimpleDateFormat("hh:mm a");
 
@@ -450,6 +476,29 @@ public class HomeMainActivity extends AppCompatActivity
         }
 
         return dateFormatter.format(calendar.getTime());
+    }
+
+    public static String getTimeInString(String timeMilliSeconds) {
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        SimpleDateFormat dateFormatLocal = new SimpleDateFormat("hh:mm a");
+
+        dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        Calendar calendar = Calendar.getInstance();
+        try {
+            Date date = dateFormatter.parse(timeMilliSeconds);
+            Long mLongTime = date.getTime();
+            calendar.setTimeInMillis(mLongTime);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            return "";
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return "";
+        }
+        dateFormatLocal.setTimeZone(TimeZone.getDefault());
+
+        return dateFormatLocal.format(calendar.getTime());
     }
 
     // Storage Permissions
@@ -789,7 +838,9 @@ public class HomeMainActivity extends AppCompatActivity
 
                     imgValues.put("image_local_path", imagePath);
                     imgValues.put("image_name", imageName);
-                    imgValues.put("image_date", imageJsonObj.getString("date"));
+                    String date = imageJsonObj.getString("date");
+                    imgValues.put("image_date", HomeMainActivity.getDateInString(date));
+                    imgValues.put("image_time", HomeMainActivity.getTimeInString(System.currentTimeMillis()));
                     imgValues.put("status", 1);
 
                     getContentResolver().update(Uri.parse(SchoolDataConstants.CONTENT_URI + SchoolDataConstants.ALBUM_IMAGES),

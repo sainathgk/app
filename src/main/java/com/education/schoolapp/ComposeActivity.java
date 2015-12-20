@@ -244,7 +244,7 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     private void handleSendMessage() {
-        String textTo = Joiner.on(",").skipNulls().join(mStudentIdArray);
+        String textTo = Joiner.on(", ").skipNulls().join(mStudentIdArray);
 
         if (mRadioCompose.getCheckedRadioButtonId() == R.id.individual_radioButton2) {
             textTo = mToView.getText().toString();
@@ -280,12 +280,12 @@ public class ComposeActivity extends AppCompatActivity implements View.OnClickLi
         NetworkResp networkResp = new NetworkResp();
         networkConn.setNetworkListener(networkResp);
 
-        String[] toStringArray = (String[]) Arrays.asList(textTo.split(",")).toArray();
+        String[] toStringArray = (String[]) Arrays.asList(textTo.split(", ")).toArray();
         JSONArray toSenderIds = new JSONArray();
         int toSenderIdsLength = toStringArray.length;
-        if (isNotReply) {
+        /*if (isNotReply) {
             toSenderIdsLength--;
-        }
+        }*/
         for (int i = 0; i < toSenderIdsLength; i++) {
             toSenderIds.put(mStudentsMap.get(toStringArray[i]));
         }
