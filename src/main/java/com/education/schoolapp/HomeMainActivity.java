@@ -389,7 +389,7 @@ public class HomeMainActivity extends AppCompatActivity
 
         /*SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");*/
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-        SimpleDateFormat dateFormatLocal = new SimpleDateFormat("dd-MMM-yyyy HH:mm a");
+        SimpleDateFormat dateFormatLocal = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
 
         dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 
@@ -745,13 +745,14 @@ public class HomeMainActivity extends AppCompatActivity
     public void updateFragments() {
         for (int i = 0; i < mViewPager.getAdapter().getCount(); i++) {
             Fragment fragment = getSupportFragmentManager().findFragmentByTag(getFragmentTag(i));
-            if (i == 2) {
-                //((AlbumFragment) fragment).updateAlbum(getApplicationContext());
-                ((AlbumFragment) fragment).updateFolder(getApplicationContext());
-            } else {
-                ((MessagesFragment) fragment).updateMessages();
+            if (fragment != null) {
+                if (i == 2) {
+                    //((AlbumFragment) fragment).updateAlbum(getApplicationContext());
+                    ((AlbumFragment) fragment).updateFolder(getApplicationContext());
+                } else {
+                    ((MessagesFragment) fragment).updateMessages();
+                }
             }
-
             mViewPager.getAdapter().notifyDataSetChanged();
             mViewPager.invalidate();
         }
@@ -1001,6 +1002,7 @@ public class HomeMainActivity extends AppCompatActivity
 
                                 ContentValues msgValues = mAlbumMessageMap.get(albumId);
 
+                                msgValues.remove("message_id");
                                 albumValues[albIdx].putAll(msgValues);
                             }
                             //TODO - To be checked again

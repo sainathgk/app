@@ -410,6 +410,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
                                 ContentValues msgValues = mAlbumMessageMap.get(albumId);
 
+                                msgValues.remove("message_id");
                                 albumValues[albIdx].putAll(msgValues);
                             }
                             //TODO - To be checked again

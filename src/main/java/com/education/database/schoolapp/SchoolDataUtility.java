@@ -156,7 +156,7 @@ public class SchoolDataUtility {
             String membersString = memCursor.getString(memCursor.getColumnIndex("member_ids"));
 
             if (mIsTeacher) {
-                memberStrings = new ArrayList<String>(Arrays.asList(membersString.split("\",\"")));
+                memberStrings = new ArrayList<String>(Arrays.asList(membersString.split(",")));
             } else {
                 memberStrings = new ArrayList<String>(Arrays.asList(membersString.split(",")));
             }

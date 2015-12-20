@@ -160,6 +160,7 @@ public class GcmService extends GcmListenerService {
 
                     if (!sharePrefs.getBoolean(SHARED_MSG_VIEW, true)) {
                         Intent notiIntent = new Intent(getApplicationContext(), HomeMainActivity.class);
+                        notiIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                         notiIntent.putExtra("message_type", msgValues.getAsInteger("message_type"));
 
                         PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notiIntent,
@@ -205,6 +206,7 @@ public class GcmService extends GcmListenerService {
 
                                 ContentValues msgValues = mAlbumMessageMap.get(albumId);
 
+                                msgValues.remove("message_id");
                                 albumValues[albIdx].putAll(msgValues);
                             }
                             //TODO - To be checked again

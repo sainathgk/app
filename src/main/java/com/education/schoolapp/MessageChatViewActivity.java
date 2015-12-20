@@ -84,6 +84,7 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
 
     private int mDownloadImagesLength;
     private int mCurrentImg;
+    private int mLatestMsgType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -145,6 +146,7 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
                     mChatListAdapter.notifyDataSetChanged();
                 }
                 if (mChatList != null) {
+                    mChatList.scrollToPosition(mChatListAdapter.getItemCount() - 1);
                     mChatList.invalidate();
                 }
                 downloadImagesFromServer();
@@ -227,6 +229,8 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
 
     private void handleSendMessage(String message, String album_id, int messageType) {
         progress.show();
+
+        mLatestMsgType = messageType;
 
         JSONArray toSenderIds;
         if (mTextTo != null && !mTextTo.isEmpty()) {
@@ -333,7 +337,9 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
                     try {
                         JSONObject respObj = new JSONObject(networkResult);
 
-                        msgRespValues.put("message_id", respObj.getJSONObject("_id").getString("$oid"));
+                        if (mLatestMsgType != 4) {
+                            msgRespValues.put("message_id", respObj.getJSONObject("_id").getString("$oid"));
+                        }
                         //msgRespValues.put("message_id", respObj.getString("$oid"));
                         if (mTextTo.isEmpty()) {
                             mTextTo = respObj.getString("group_id");
@@ -547,6 +553,8 @@ public class MessageChatViewActivity extends AppCompatActivity implements View.O
                     Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     startActivityForResult(intent, REQUEST_CAMERA);
                 } else if (items[item].equals(getString(R.string.popup_choose_gallery))) {
+                    /*Intent intent = new Intent(
+                            Action.ACTION_MULTIPLE_PICK);*/
                     Intent intent = new Intent(
                             Action.ACTION_MULTIPLE_PICK);
                     intent.setClass(getApplicationContext(), CustomGalleryActivity.class);
