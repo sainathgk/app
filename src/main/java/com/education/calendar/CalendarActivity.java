@@ -24,7 +24,6 @@ import android.text.format.DateUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.education.schoolapp.R;
 
@@ -56,8 +55,8 @@ public class CalendarActivity extends AppCompatActivity implements CalendarView.
             findViewById(R.id.hint).setVisibility(View.INVISIBLE);
 
         mMonthDisplay = (TextView) findViewById(R.id.month_display);
-
-        mMonthDisplay.setText(String.format("%s  %d", monthArray[mView.getMonth()], mView.getYear()));
+        //mMonthDisplay.setText(String.format("%s  %d", monthArray[mView.getMonth()], mView.getYear()));
+        mMonthDisplay.setText(String.format("%s  %d", DateUtils.getMonthString(mView.getMonth(), DateUtils.LENGTH_LONG), mView.getYear()));
 
         mPreviousMonth = (Button) findViewById(R.id.previous_month);
         mPreviousMonth.setOnClickListener(this);
@@ -118,7 +117,7 @@ public class CalendarActivity extends AppCompatActivity implements CalendarView.
 
         mHandler.post(new Runnable() {
             public void run() {
-                Toast.makeText(CalendarActivity.this, DateUtils.getMonthString(mView.getMonth(), DateUtils.LENGTH_LONG) + " " + mView.getYear(), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(CalendarActivity.this, DateUtils.getMonthString(mView.getMonth(), DateUtils.LENGTH_LONG) + " " + mView.getYear(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -143,6 +142,7 @@ public class CalendarActivity extends AppCompatActivity implements CalendarView.
                 break;
         }
 
-        mMonthDisplay.setText(String.format("%s  %d", monthArray[mView.getMonth()], mView.getYear()));
+        //mMonthDisplay.setText(String.format("%s  %d", monthArray[mView.getMonth()], mView.getYear()));
+        mMonthDisplay.setText(String.format("%s  %d", DateUtils.getMonthString(mView.getMonth(), DateUtils.LENGTH_LONG), mView.getYear()));
     }
 }

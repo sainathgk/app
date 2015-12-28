@@ -40,8 +40,9 @@ public class CalendarView extends ImageView {
     private static int CELL_MARGIN_LEFT = 39;
     private static float CELL_TEXT_SIZE;
     
-	private static final String TAG = "CalendarView"; 
-	private Calendar mRightNow = null;
+	private static final String TAG = "CalendarView";
+    private final Drawable mSelectedCell;
+    private Calendar mRightNow = null;
     private Drawable mWeekTitle = null;
     private Cell mToday = null;
     private Cell[][] mCells = new Cell[6][7];
@@ -64,6 +65,8 @@ public class CalendarView extends ImageView {
 	public CalendarView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		mDecoration = context.getResources().getDrawable(R.drawable.typeb_calendar_today);
+        mSelectedCell = context.getResources().getDrawable(android.R.color.holo_green_dark);
+        mSelectedCell.setAlpha(50);
 		initCalendarView();
 	}
 	
@@ -138,6 +141,7 @@ public class CalendarView extends ImageView {
 				if(tmp[week][day].day==thisDay && tmp[week][day].thisMonth) {
 					mToday = mCells[week][day];
 					mDecoration.setBounds(mToday.getBound());
+                    //mSelectedCell.setBounds(mToday.getBound());
 				}
 			}
 			Bound.offset(0, CELL_HEIGH); // move to next row and first column
@@ -177,12 +181,14 @@ public class CalendarView extends ImageView {
     public void nextMonth() {
     	mHelper.nextMonth();
     	initCells();
+        mSelectedCell.setAlpha(0);
     	invalidate();
     }
     
     public void previousMonth() {
     	mHelper.previousMonth();
     	initCells();
+        mSelectedCell.setAlpha(0);
     	invalidate();
     }
     
@@ -197,8 +203,9 @@ public class CalendarView extends ImageView {
     public void goToday() {
     	Calendar cal = Calendar.getInstance();
     	mHelper = new MonthDisplayHelper(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH));
-    	initCells();
-    	invalidate();
+        initCells();
+        mSelectedCell.setAlpha(0);
+        invalidate();
     }
     
     public Calendar getDate() {
@@ -212,6 +219,9 @@ public class CalendarView extends ImageView {
 				for(Cell day : week) {
 					if(day.hitTest((int)event.getX(), (int)event.getY())) {
 						mOnCellTouchListener.onTouch(day);
+                        mSelectedCell.setBounds(day.getBound());
+                        mSelectedCell.setAlpha(50);
+                        invalidate();
 					}						
 				}
 			}
@@ -240,6 +250,8 @@ public class CalendarView extends ImageView {
 		if(mDecoration!=null && mToday!=null) {
 			mDecoration.draw(canvas);
 		}
+
+        mSelectedCell.draw(canvas);
 	}
 	
 	public class GrayCell extends Cell {
