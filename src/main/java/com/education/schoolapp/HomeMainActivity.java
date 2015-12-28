@@ -46,6 +46,7 @@ import android.widget.MultiAutoCompleteTextView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.education.calendar.CalendarActivity;
 import com.education.connection.schoolapp.JSONUtility;
 import com.education.connection.schoolapp.NetworkConnectionUtility;
 import com.education.connection.schoolapp.NetworkConstants;
@@ -592,7 +593,9 @@ public class HomeMainActivity extends AppCompatActivity
 
             finish();
         } else if (id == R.id.nav_calendar) {
-            Toast.makeText(this, "Academic Calendar will be shown here", Toast.LENGTH_SHORT).show();
+            Intent calIntent = new Intent(this, CalendarActivity.class);
+            calIntent.setAction(Intent.ACTION_VIEW);
+            startActivity(calIntent);
         } else if (id == R.id.nav_address) {
             Toast.makeText(this, "School Address will be shown here", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_contacts) {
