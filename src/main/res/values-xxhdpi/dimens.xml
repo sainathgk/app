@@ -1,0 +1,10 @@
+<resources>
+    <dimen name="week_top_margin">140px</dimen>
+    <dimen name="week_left_margin">50px</dimen>
+    <dimen name="week_width">950px</dimen>
+    <dimen name="cell_width">118px</dimen>
+    <dimen name="cell_heigh">110px</dimen>
+    <dimen name="cell_margin_top">172px</dimen>
+    <dimen name="cell_margin_left">139px</dimen>
+    <dimen name="cell_text_size">46px</dimen>
+</resources>

@@ -34,11 +34,13 @@ import java.util.Calendar;
 public class CalendarView extends ImageView {
     private static int WEEK_TOP_MARGIN = 74;
     private static int WEEK_LEFT_MARGIN = 40;
+    private static int WEEK_WIDTH = 440;
     private static int CELL_WIDTH = 58;
     private static int CELL_HEIGH = 53;
     private static int CELL_MARGIN_TOP = 92;
     private static int CELL_MARGIN_LEFT = 39;
-    private static float CELL_TEXT_SIZE;
+
+	private static float CELL_TEXT_SIZE;
     
 	private static final String TAG = "CalendarView";
     private final Drawable mSelectedCell;
@@ -50,7 +52,7 @@ public class CalendarView extends ImageView {
     MonthDisplayHelper mHelper;
     Drawable mDecoration = null;
 
-	public interface OnCellTouchListener {
+    public interface OnCellTouchListener {
     	public void onTouch(Cell cell);
     }
 
@@ -76,6 +78,7 @@ public class CalendarView extends ImageView {
 		Resources res = getResources();
 		WEEK_TOP_MARGIN  = (int) res.getDimension(R.dimen.week_top_margin);
 		WEEK_LEFT_MARGIN = (int) res.getDimension(R.dimen.week_left_margin);
+        WEEK_WIDTH = (int) res.getDimension(R.dimen.week_width);
 		
 		CELL_WIDTH = (int) res.getDimension(R.dimen.cell_width);
 		CELL_HEIGH = (int) res.getDimension(R.dimen.cell_heigh);
@@ -141,7 +144,6 @@ public class CalendarView extends ImageView {
 				if(tmp[week][day].day==thisDay && tmp[week][day].thisMonth) {
 					mToday = mCells[week][day];
 					mDecoration.setBounds(mToday.getBound());
-                    //mSelectedCell.setBounds(mToday.getBound());
 				}
 			}
 			Bound.offset(0, CELL_HEIGH); // move to next row and first column
@@ -155,10 +157,10 @@ public class CalendarView extends ImageView {
 		Rect re = getDrawable().getBounds();
 		WEEK_LEFT_MARGIN = CELL_MARGIN_LEFT = (right-left - re.width()) / 2;
         if (WEEK_LEFT_MARGIN < 0) {
-            WEEK_LEFT_MARGIN = CELL_MARGIN_LEFT = 39;
+            WEEK_LEFT_MARGIN = CELL_MARGIN_LEFT = (int) getResources().getDimension(R.dimen.cell_margin_left);
         }
-		//mWeekTitle.setBounds(WEEK_LEFT_MARGIN, WEEK_TOP_MARGIN, WEEK_LEFT_MARGIN+mWeekTitle.getMinimumWidth(), WEEK_TOP_MARGIN+mWeekTitle.getMinimumHeight());
-        mWeekTitle.setBounds(WEEK_LEFT_MARGIN, WEEK_TOP_MARGIN, 440, WEEK_TOP_MARGIN+mWeekTitle.getMinimumHeight()-10);
+        WEEK_WIDTH = (int) getResources().getDimension(R.dimen.week_width);
+        mWeekTitle.setBounds(WEEK_LEFT_MARGIN, WEEK_TOP_MARGIN, WEEK_WIDTH, WEEK_TOP_MARGIN+mWeekTitle.getMinimumHeight()-10);
 
 		initCells();
 		super.onLayout(changed, left, top, right, bottom);
