@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
@@ -77,7 +78,7 @@ import java.util.Random;
 import java.util.TimeZone;
 
 public class HomeMainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, ActivityCompat.OnRequestPermissionsResultCallback {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -136,6 +137,13 @@ public class HomeMainActivity extends AppCompatActivity
     private int mAlbumIdx = 0;
     private ArrayList<String> mSelectedStudentsArray;
     private HashMap<String, ContentValues> mAlbumMessageMap = new HashMap<String, ContentValues>();
+
+    // Storage Permissions
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -502,13 +510,6 @@ public class HomeMainActivity extends AppCompatActivity
         return dateFormatLocal.format(calendar.getTime());
     }
 
-    // Storage Permissions
-    private static final int REQUEST_EXTERNAL_STORAGE = 1;
-    private static String[] PERMISSIONS_STORAGE = {
-            android.Manifest.permission.READ_EXTERNAL_STORAGE,
-            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-    };
-
     /**
      * Checks if the app has permission to write to device storage
      * <p/>
@@ -598,12 +599,23 @@ public class HomeMainActivity extends AppCompatActivity
             startActivity(calIntent);
         } else if (id == R.id.nav_address) {
             Toast.makeText(this, "School Address will be shown here", Toast.LENGTH_SHORT).show();
+            Intent addrIntent = new Intent(this, AddressMapsActivity.class);
+            startActivity(addrIntent);
         } else if (id == R.id.nav_contacts) {
             Toast.makeText(this, "Important Contacts will be shown here", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_facebook) {
-            Toast.makeText(this, "School's Facebook page will be launched", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "School's Facebook page will be launched", Toast.LENGTH_SHORT).show();
+            String fbUrl = "fb://page/20151229144435";//"https://www.facebook.com/sainathkasi";
+            Intent fbIntent = new Intent(Intent.ACTION_VIEW);
+            fbIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+            fbIntent.setData(Uri.parse(fbUrl));
+            startActivity(fbIntent);
         } else if (id == R.id.nav_website) {
-            Toast.makeText(this, "School's Website will be launched", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "School's Website will be launched", Toast.LENGTH_SHORT).show();
+            String urlBrowse = "http://www.google.co.in";
+            Intent webIntent = new Intent(Intent.ACTION_VIEW);
+            webIntent.setData(Uri.parse(urlBrowse));
+            startActivity(webIntent);
         } else if (id == R.id.nav_messages) {
             mViewPager.setCurrentItem(0, true);
         } else if (id == R.id.nav_notifications) {
@@ -732,6 +744,16 @@ public class HomeMainActivity extends AppCompatActivity
         mDownloadImagesLength = imagesLength;
         mCurrentImg = 0;
 
+        if (imagesLength > 0) {
+            verifyStoragePermissions(this);
+
+            int permission = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+            if (permission == PackageManager.PERMISSION_GRANTED) {
+                downloadImages(imagesIdArray);
+            }
+        }
+/*
         for (int i = 0; i < imagesLength; i++) {
             try {
                 String imageId = imagesIdArray.getString(i);
@@ -741,6 +763,31 @@ public class HomeMainActivity extends AppCompatActivity
                 networkConn.getMultimedia(imageId);
             } catch (JSONException e) {
                 e.printStackTrace();
+            }
+        }*/
+    }
+
+    private void downloadImages(JSONArray imageIds) {
+        for (int i = 0; i < imageIds.length(); i++) {
+            try {
+                String imageId = imageIds.getString(i);
+                Log.i("Network", "Download Image ID is " + imageId);
+                progress.setTitle(R.string.multimedia_download_progress);
+                progress.show();
+                networkConn.getMultimedia(imageId);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQUEST_EXTERNAL_STORAGE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                downloadImagesFromServer();
             }
         }
     }

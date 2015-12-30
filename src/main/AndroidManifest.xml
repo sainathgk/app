@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.education.schoolapp">
+    package="com.education.schoolapp" >
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -18,12 +18,19 @@
 
     <uses-permission android:name="com.education.schoolapp.permission.C2D_MESSAGE" />
 
+    <!--
+         The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
+         Google Maps Android API v2, but you must specify either coarse or fine
+         location permissions for the 'MyLocation' functionality. 
+    -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_school_black_36dp"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme" >
         <activity
             android:name=".HomeMainActivity"
             android:icon="@drawable/home_logo"
@@ -35,7 +42,7 @@
             android:name=".ProfileScrollingActivity"
             android:label=" "
             android:parentActivityName=".HomeMainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.education.schoolapp.HomeMainActivity" />
@@ -47,7 +54,7 @@
             android:name=".SavedMessagesActivity"
             android:label="@string/saved_msgs_title_1"
             android:parentActivityName=".HomeMainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.education.schoolapp.HomeMainActivity" />
@@ -68,7 +75,7 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:icon="@drawable/ic_school_black_36dp"
             android:label="@string/title_activity_welcome"
-            android:theme="@style/FullscreenTheme">
+            android:theme="@style/FullscreenTheme" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -78,20 +85,20 @@
         <activity
             android:name=".ComposeActivity"
             android:label="@string/compose_title" />
-
         <activity android:name=".MessageViewActivity" />
-
         <activity
             android:name="com.education.calendar.CalendarActivity"
             android:label="@string/action_calendar"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme" />
-
+            android:theme="@style/AppTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.education.schoolapp.HomeMainActivity" />
+            </activity>
         <activity
             android:name=".MessageChatViewActivity"
             android:configChanges="keyboard|keyboardHidden" />
-
-        <activity android:name=".CustomGalleryActivity">
+        <activity android:name=".CustomGalleryActivity" >
             <intent-filter>
                 <action android:name="luminous.ACTION_PICK" />
                 <action android:name="luminous.ACTION_MULTIPLE_PICK" />
@@ -103,7 +110,7 @@
         <receiver android:name="com.education.service.schoolapp.NotificationReceiver" />
         <receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"
-            android:permission="com.google.android.c2dm.permission.SEND">
+            android:permission="com.google.android.c2dm.permission.SEND" >
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
                 <!-- for Gingerbread GSF backward compat -->
@@ -115,14 +122,14 @@
 
         <service
             android:name="com.education.service.schoolapp.GcmService"
-            android:exported="false">
+            android:exported="false" >
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
             </intent-filter>
         </service>
         <service
             android:name="com.education.service.schoolapp.MyInstanceIDListenerService"
-            android:exported="false">
+            android:exported="false" >
             <intent-filter>
                 <action android:name="com.google.android.gms.iid.InstanceID" />
             </intent-filter>
@@ -130,6 +137,26 @@
         <service
             android:name="com.education.service.schoolapp.RegistrationIntentService"
             android:exported="false" />
+        <!--
+             The API key for Google Maps-based APIs is defined as a string resource.
+             (See the file "res/values/google_maps_api.xml").
+             Note that the API key is linked to the encryption key used to sign the APK.
+             You need a different API key for each encryption key, including the release key that is used to
+             sign the APK for publishing.
+             You can define the keys for the debug and release targets in src/debug/ and src/release/. 
+        -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/google_maps_key" />
+
+        <activity
+            android:name=".AddressMapsActivity"
+            android:theme="@style/AppTheme"
+            android:label="@string/title_activity_address_maps" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.education.schoolapp.HomeMainActivity" />
+        </activity>
     </application>
 
 </manifest>
